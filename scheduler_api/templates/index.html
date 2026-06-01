@@ -1,0 +1,2491 @@
+{% load schedule_tags %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChronosAI — SISTec Advanced Scheduling ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    scale: { '102': '1.02' },
+                    boxShadow: {
+                        'glow-orange': '0 0 24px rgba(249, 115, 22, 0.35)',
+                        'glow-emerald': '0 0 20px rgba(16, 185, 129, 0.25)',
+                        'glow-amber': '0 0 28px rgba(245, 158, 11, 0.4)',
+                        'card': '0 4px 24px -4px rgba(15, 23, 42, 0.08)',
+                    },
+                    animation: {
+                        'bounce-dot': 'bounceDot 1.4s infinite ease-in-out both',
+                    },
+                    keyframes: {
+                        bounceDot: {
+                            '0%, 80%, 100%': { transform: 'scale(0.6)', opacity: '0.4' },
+                            '40%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        /* 🌌 Ultra-Premium Glassmorphism & Cyberpunk-lite tokens */
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.88) 100%);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+        }
+        .glass-panel-dark {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+        }
+        .neon-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.03);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .neon-card:hover {
+            transform: translateY(-3px) scale(1.005);
+            border-color: rgba(249, 115, 22, 0.3);
+            box-shadow: 0 16px 40px rgba(249, 115, 22, 0.08), 0 0 20px rgba(249, 115, 22, 0.03);
+        }
+        .proxy-row-glow {
+            box-shadow: inset 4px 0 0 0 #f59e0b, 0 0 25px rgba(245, 158, 11, 0.15);
+            background: linear-gradient(90deg, rgba(255, 251, 235, 0.92) 0%, rgba(255, 255, 255, 0.7) 100%);
+        }
+        .nav-item-active {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .progress-neon {
+            background: linear-gradient(90deg, #ea580c, #f59e0b, #fbbf24);
+            box-shadow: 0 0 16px rgba(249, 115, 22, 0.6);
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        .typing-dot:nth-child(3) { animation-delay: 0s; }
+        #chat-stream::-webkit-scrollbar { width: 6px; }
+        #chat-stream::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+        @keyframes marquee {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
+        }
+        
+        /* 📈 Subtle page entry animation */
+        @keyframes fadeInSlide {
+            0% { opacity: 0; transform: translateY(12px); filter: blur(4px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+        .tab-content {
+            animation: fadeInSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        /* 💬 Premium Chatbot bubbles */
+        .chat-bubble-ai {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-left: 3px solid #ea580c;
+            box-shadow: 0 4px 20px -3px rgba(15, 23, 42, 0.04);
+            border-radius: 20px 20px 20px 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .chat-bubble-ai:hover {
+            box-shadow: 0 8px 24px -3px rgba(234, 88, 12, 0.08);
+            border-color: rgba(234, 88, 12, 0.2);
+            border-left-color: #f97316;
+        }
+        .chat-bubble-user {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #ffffff;
+            box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.15);
+            border-radius: 20px 20px 4px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-right: 3px solid #f97316;
+            font-weight: 500;
+        }
+        .chat-stream-grid {
+            background-color: #f8fafc;
+            background-image: radial-gradient(rgba(249, 115, 22, 0.04) 1.2px, transparent 1.2px);
+            background-size: 24px 24px;
+        }
+        
+        /* ⚡ Micro-interactions on buttons */
+        .btn-premium {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-premium:hover {
+            transform: translateY(-1.5px) scale(1.01);
+            box-shadow: 0 10px 25px -3px rgba(249, 115, 22, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen antialiased relative" data-current-time="{{ current_time|default:'00:00' }}" data-total-lectures="{{ total_lectures_today|default:0 }}">
+
+    <!-- 🌌 Dynamic Background Organic Glow Blobs -->
+    <div class="fixed top-0 left-0 w-full h-full pointer-events-none z-[-1] overflow-hidden opacity-60">
+        <div class="absolute top-[-10%] left-[-10%] w-[55vw] h-[55vw] bg-gradient-to-tr from-orange-500/10 to-amber-500/5 rounded-full blur-[130px] animate-pulse" style="animation-duration: 6s;"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[55vw] h-[55vw] bg-gradient-to-tr from-violet-500/5 to-fuchsia-500/5 rounded-full blur-[130px] animate-pulse" style="animation-duration: 9s;"></div>
+    </div>
+
+    {% if is_unauthenticated %}
+    <!-- ═══ GLASSMORPHIC LOGIN & REGISTRATION PORTAL ═══ -->
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
+        <div class="glass-panel-dark w-full max-w-md rounded-3xl border border-white/10 p-8 shadow-2xl relative overflow-hidden text-white my-auto">
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-gradient-to-tr from-orange-600 to-amber-500 rounded-full blur-2xl opacity-40"></div>
+            
+            <div class="flex flex-col items-center text-center mb-6">
+                <div class="bg-gradient-to-tr from-orange-500 to-amber-400 p-4 rounded-2xl shadow-glow-orange mb-3">
+                    <i class="fa-solid fa-microchip text-2xl text-white"></i>
+                </div>
+                <h2 class="text-2xl font-black bg-gradient-to-r from-orange-400 via-amber-300 to-orange-200 bg-clip-text text-transparent">ChronosAI ERP Portal</h2>
+                <p class="text-xs text-slate-400 mt-1">SISTec CSE-AIDS Timetable command suite</p>
+            </div>
+
+            <!-- Sleek Switcher Tabs -->
+            <div class="flex bg-slate-900/60 p-1 rounded-2xl border border-slate-800/80 mb-6">
+                <button onclick="switchAuthTab('login')" id="tab-login-btn" class="flex-1 text-center py-2.5 rounded-xl text-xs font-bold transition-all duration-300 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg">
+                    Sign In
+                </button>
+                <button onclick="switchAuthTab('register')" id="tab-register-btn" class="flex-1 text-center py-2.5 rounded-xl text-xs font-bold transition-all duration-300 text-slate-400 hover:text-slate-200">
+                    Sign Up
+                </button>
+            </div>
+
+            <!-- Login Panel -->
+            <div id="auth-login-panel" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Username</label>
+                    <input type="text" id="login-username" placeholder="Enter username (e.g. hod, prof_meha)" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300" onkeydown="if(event.key==='Enter') performLogin()">
+                </div>
+                
+                <button onclick="performLogin()" id="login-btn" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs py-4 rounded-xl transition-all duration-300 tracking-[0.2em] uppercase shadow-lg hover:shadow-glow-orange hover:scale-[1.01] mt-6">
+                    Enter Portal
+                </button>
+            </div>
+
+            <!-- Register Panel (Hidden by default) -->
+            <div id="auth-register-panel" class="hidden space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Username</label>
+                    <input type="text" id="register-username" placeholder="Choose username (e.g. hod_new, meha)" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Email Address</label>
+                    <input type="email" id="register-email" placeholder="name@sistec.ac.in" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Password</label>
+                    <input type="password" id="register-password" placeholder="Create strong password" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Role Type</label>
+                    <select id="register-role" onchange="toggleRegisterRole()" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300">
+                        <option value="Faculty" selected class="bg-slate-950 text-slate-200">👨‍🏫 Faculty Member</option>
+                        <option value="HOD" class="bg-slate-950 text-slate-200">👑 HOD Department Head</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Select Department</label>
+                    <select id="register-department" onchange="filterEmployeesByDepartment()" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300">
+                        <option value="" disabled selected class="bg-slate-950 text-slate-400">-- Choose Department --</option>
+                        <option value="CSE-AIDS" class="bg-slate-950 text-slate-200">CSE-AIDS (AI & Data Science)</option>
+                        <option value="CSE" class="bg-slate-950 text-slate-200">CSE (Computer Science)</option>
+                        <option value="ECE" class="bg-slate-950 text-slate-200">ECE (Electronics & Comm)</option>
+                        <option value="ME" class="bg-slate-950 text-slate-200">ME (Mechanical Eng)</option>
+                    </select>
+                </div>
+                <div id="register-employee-wrapper" class="transition-all duration-300 max-h-40 overflow-hidden">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Select Your Faculty Profile</label>
+                    <select id="register-employee" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300">
+                        <option value="" disabled selected class="bg-slate-950 text-slate-400">-- Choose your name --</option>
+                    </select>
+                </div>
+
+                <!-- Client-side Employee Data Mapper -->
+                <script id="employees-data" type="application/json">
+                    [
+                        {% for emp in all_employees %}
+                            {"id": {{ emp.id }}, "name": "{{ emp.name|escapejs }}", "department": "{{ emp.department|escapejs }}"}{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    ]
+                </script>
+                
+                <button onclick="performRegister()" id="register-btn" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs py-4 rounded-xl transition-all duration-300 tracking-[0.2em] uppercase shadow-lg hover:shadow-glow-orange hover:scale-[1.01] mt-6">
+                    Create Account
+                </button>
+            </div>
+
+            <!-- Quick Access / Info Panel -->
+            <div class="mt-6 pt-5 border-t border-slate-800/80 rounded-2xl bg-slate-950/40 p-4">
+                <p class="text-[10px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> Account Setup Notes:</p>
+                <div class="mt-2 text-[10px] text-slate-400 space-y-1 font-semibold leading-relaxed">
+                    <p>👑 **HODs** manage all years, proxy shifts, fatigue mapping, and approvals.</p>
+                    <p>👨‍🏫 **Faculty** accounts isolate work spaces to their selected employee timetable slot.</p>
+                    <p class="text-slate-500 mt-1 italic">// Registered accounts automatically gain portal access.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+
+    <!-- Mobile overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 hidden lg:hidden" onclick="toggleMobileSidebar(false)"></div>
+
+    <div class="flex min-h-screen">
+
+        <!-- ═══ PREMIUM SIDEBAR ═══ -->
+        <aside id="app-sidebar" class="fixed lg:sticky top-0 left-0 z-50 h-screen w-72 bg-slate-950 text-white flex flex-col border-r border-slate-800/80 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl">
+            <!-- Brand -->
+            <div class="p-6 border-b border-slate-800/80">
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-tr from-orange-500 to-amber-400 p-3 rounded-xl shadow-glow-orange transition-all duration-300 hover:scale-102">
+                        <i class="fa-solid fa-microchip text-xl text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-extrabold tracking-wide bg-gradient-to-r from-orange-400 via-amber-300 to-orange-200 bg-clip-text text-transparent">ChronosAI</h1>
+                        <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-semibold">SISTec ERP Suite</p>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-[11px] font-bold text-slate-400">Role: <strong class="text-orange-400 uppercase font-extrabold">{{ role }}</strong></span>
+                </div>
+                {% if role == 'HOD' %}
+                <p class="text-[10px] text-slate-500 mt-2 leading-relaxed">🏛️ Department: <strong class="text-amber-400 uppercase font-extrabold">{{ profile.department|default:"CSE-AIDS" }}</strong></p>
+                {% elif role == 'Faculty' %}
+                <p class="text-[10px] text-slate-500 mt-2 leading-relaxed">🏛️ Department: <strong class="text-slate-300">{{ profile.department|default:"CSE-AIDS" }}</strong></p>
+                <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">👤 Profile: <strong class="text-slate-300">{{ profile.employee.name }}</strong></p>
+                {% endif %}
+            </div>
+
+            <!-- Nav -->
+            <nav class="flex-1 p-4 space-y-1.5 overflow-y-auto">
+                {% if role == 'HOD' %}
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all duration-300 ease-in-out hover:scale-[1.02] nav-item-active">
+                    <i class="fa-solid fa-chart-pie w-5 text-center"></i> Command Center
+                </button>
+                {% else %}
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all duration-300 ease-in-out hover:scale-[1.02] nav-item-active">
+                    <i class="fa-solid fa-chalkboard-user w-5 text-center"></i> My Workspace
+                </button>
+                {% endif %}
+                <button onclick="switchTab('chat')" id="btn-chat" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all duration-300 ease-in-out hover:scale-[1.02]">
+                    <i class="fa-solid fa-robot w-5 text-center"></i> AI Assistant
+                </button>
+                <button onclick="switchTab('directory')" id="btn-directory" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all duration-300 ease-in-out hover:scale-[1.02]">
+                    <i class="fa-solid fa-users-gear w-5 text-center"></i> Faculty Matrix
+                </button>
+                {% if role == 'HOD' %}
+                <button onclick="switchTab('upload')" id="btn-upload" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all duration-300 ease-in-out hover:scale-[1.02]">
+                    <i class="fa-solid fa-cloud-arrow-up w-5 text-center"></i> Upload Hub
+                </button>
+                {% endif %}
+                <button onclick="switchTab('kiosk')" id="btn-kiosk" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all duration-300 ease-in-out hover:scale-[1.02]">
+                    <i class="fa-solid fa-desktop w-5 text-center"></i> Kiosk Portal
+                </button>
+                
+                <!-- Logout Button -->
+                <button onclick="performLogout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-rose-400 hover:text-white hover:bg-rose-950/40 transition-all duration-300 ease-in-out hover:scale-[1.02] mt-8 border border-rose-950/20 shadow-sm">
+                    <i class="fa-solid fa-power-off w-5 text-center text-rose-500"></i> Logout Portal
+                </button>
+            </nav>
+
+            <!-- Sidebar footer -->
+            <div class="p-4 border-t border-slate-800/80">
+                <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-3">
+                    <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1">Pipeline Status</p>
+                    <p class="text-sm font-semibold text-emerald-400 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        {{ celery_mode_label|default:"Celery Eager" }}
+                    </p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ═══ MAIN WORKSPACE ═══ -->
+        <div class="flex-1 flex flex-col min-w-0">
+
+            <!-- Sticky top bar -->
+            <header class="sticky top-0 z-30 glass-panel border-b border-slate-200/80 px-4 lg:px-8 py-4 flex items-center justify-between gap-4 shadow-sm">
+                <div class="flex items-center gap-3 min-w-0">
+                    <button onclick="toggleMobileSidebar(true)" class="lg:hidden p-2.5 rounded-xl bg-slate-900 text-white hover:bg-orange-600 transition-all duration-300 hover:shadow-glow-orange">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="min-w-0">
+                        <p id="context-greeting" class="text-sm lg:text-base font-bold text-slate-800 truncate tracking-tight" data-user-display="{% if role == 'HOD' %}Head of Department (Admin){% else %}Prof. {{ profile.employee.name }}{% endif %}">Loading greeting…</p>
+                        <p class="text-xs text-slate-500 truncate">{{ current_day|default:"Today" }} · SISTec Bhopal</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 shrink-0">
+                    <div class="hidden sm:flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl font-mono text-lg font-bold tracking-widest shadow-lg transition-all duration-300 hover:shadow-glow-orange hover:scale-102">
+                        <i class="fa-regular fa-clock text-orange-400 text-sm"></i>
+                        <span id="live-clock">00:00:00</span>
+                    </div>
+                    <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-3 py-1.5 rounded-full border border-emerald-200 uppercase tracking-wider hidden md:inline-flex items-center gap-1">
+                        <i class="fa-solid fa-circle text-[6px] animate-pulse"></i> Live Sync
+                    </span>
+                </div>
+            </header>
+
+            <main class="flex-1 p-4 lg:p-8 max-w-[1600px] w-full mx-auto space-y-6">
+
+                <!-- ═══ TAB 1: DASHBOARD (Unified HOD Command Center & Faculty Workspace) ═══ -->
+                <section id="dashboard" class="tab-content space-y-6 animate-in fade-in duration-500">
+
+                    {% if role == 'HOD' %}
+                    <!-- 🏛️ ════ HOD COMMAND CENTER ════ -->
+                    <!-- Conflict Alerts -->
+                    {% if conflicts %}
+                    <div class="glass-panel border-l-4 border-rose-500 bg-rose-50/90 text-rose-900 p-5 rounded-2xl shadow-md space-y-2 animate-pulse">
+                        <h3 class="text-sm font-bold uppercase tracking-wider flex items-center gap-2 text-rose-700">
+                            <i class="fa-solid fa-circle-exclamation text-rose-500"></i> Department Overlaps / Conflicts Detected
+                        </h3>
+                        <ul class="text-xs font-semibold space-y-1 pl-4 list-disc text-rose-800">
+                            {% for conflict in conflicts %}
+                            <li>{{ conflict }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- HOD Approvals Inbox -->
+                    {% if pending_swaps %}
+                    <div class="glass-panel rounded-2xl border border-white/80 shadow-card p-6 space-y-4">
+                        <h3 class="text-base font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                            <i class="fa-solid fa-inbox text-orange-500 animate-pulse"></i> Swap Request Approvals Queue ({{ pending_swaps.count }} pending)
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            {% for swap in pending_swaps %}
+                            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-3 flex flex-col justify-between hover:border-orange-200 transition-all duration-300">
+                                <div>
+                                    <div class="flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase">
+                                        <span>Submitted {{ swap.created_at|date:"d M Y @ H:i" }}</span>
+                                        <span class="bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full font-black">HOD Approval</span>
+                                    </div>
+                                    <div class="mt-4 flex items-center justify-between gap-2">
+                                        <div class="text-slate-800 p-3 bg-slate-50 border border-slate-100 rounded-xl w-[45%] text-center">
+                                            <p class="font-extrabold text-slate-800 text-xs truncate" title="{{ swap.requestor.name }}">{{ swap.requestor.name }}</p>
+                                            <p class="text-[10px] text-orange-600 font-mono font-bold mt-1.5"><i class="fa-regular fa-clock"></i> {{ swap.schedule_slot.start_time }}</p>
+                                            <p class="text-[9px] font-black text-slate-400 mt-0.5 truncate">{{ swap.schedule_slot.task_name }}</p>
+                                            <span class="text-[8px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-black mt-1.5 inline-block">{{ swap.schedule_slot.academic_year }}</span>
+                                        </div>
+                                        <div class="text-slate-300 font-black"><i class="fa-solid fa-right-left text-sm text-orange-500"></i></div>
+                                        <div class="text-slate-800 p-3 bg-slate-50 border border-slate-100 rounded-xl w-[45%] text-center">
+                                            <p class="font-extrabold text-slate-800 text-xs truncate" title="{{ swap.target_teacher.name }}">{{ swap.target_teacher.name }}</p>
+                                            <p class="text-[10px] text-orange-600 font-mono font-bold mt-1.5"><i class="fa-regular fa-clock"></i> {{ swap.target_slot.start_time }}</p>
+                                            <p class="text-[9px] font-black text-slate-400 mt-0.5 truncate">{{ swap.target_slot.task_name }}</p>
+                                            <span class="text-[8px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-black mt-1.5 inline-block">{{ swap.target_slot.academic_year }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 mt-4 pt-3 border-t border-slate-100">
+                                    <button onclick="approveSwapRequest({{ swap.pk }})" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-[10px] uppercase py-2.5 rounded-xl transition-all shadow-md">
+                                        Approve Swap
+                                    </button>
+                                    <button onclick="rejectSwapRequest({{ swap.pk }})" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-[10px] uppercase px-4 py-2.5 rounded-xl transition-all">
+                                        Decline
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- HOD Hero Card -->
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        <div class="xl:col-span-2 glass-panel-dark rounded-2xl border border-white/10 shadow-card p-6 lg:p-8 relative overflow-hidden text-white">
+                            <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-orange-500/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+                            <div class="relative">
+                                <p class="text-xs font-bold uppercase tracking-[0.25em] text-orange-500 mb-2">HOD Command Center</p>
+                                <h2 class="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">Today's Academic Management Suite</h2>
+                                <p class="text-slate-400 mt-2 text-sm max-w-xl">Unified schedule management for 2nd, 3rd, and 4th-year batch allocations, dynamic proxy overrides, conflict alerts, and workload fatigue maps.</p>
+                            </div>
+                        </div>
+
+                        <!-- Progress card -->
+                        <div class="glass-panel rounded-2xl border border-white/80 shadow-card p-6 flex flex-col justify-between transition-all duration-300 hover:scale-[1.01]">
+                            <div>
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Daily Course Progress</p>
+                                <div class="flex items-end justify-between mb-2">
+                                    <span class="text-3xl font-extrabold text-slate-900"><span id="completed-count">0</span><span class="text-lg text-slate-400 font-semibold">/{{ total_lectures_today|default:0 }}</span></span>
+                                    <span id="progress-percent" class="text-sm font-bold text-emerald-600">0%</span>
+                                </div>
+                                <div class="h-3 w-full bg-slate-200 rounded-full overflow-hidden">
+                                    <div id="lecture-progress-bar" class="h-full progress-neon rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-4 uppercase tracking-wider">Live tracking · {{ current_time|default:"--:--" }} IST</p>
+                        </div>
+                    </div>
+
+                    <!-- Workload Heatmap Grid -->
+                    <div class="glass-panel rounded-2xl border border-white/80 shadow-card p-6 space-y-4">
+                        <h3 class="text-base font-extrabold text-slate-900 tracking-tight"><i class="fa-solid fa-chart-line text-orange-500 mr-2"></i>Faculty Workloads & Fatigue Analytics</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {% for load in faculty_load %}
+                            <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-2 transition-all hover:scale-[1.01] hover:border-orange-100">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-slate-800 text-sm truncate" title="{{ load.name }}">{{ load.name }}</span>
+                                    <span class="text-xs font-black {% if load.fatigue_pct > 70 %}text-rose-600{% elif load.fatigue_pct > 40 %}text-amber-600{% else %}text-emerald-600{% endif %}">{{ load.fatigue_pct }}%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full {% if load.fatigue_pct > 70 %}bg-rose-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]{% elif load.fatigue_pct > 40 %}bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]{% else %}bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]{% endif %}" style="width: {{ load.fatigue_pct }}%"></div>
+                                </div>
+                                <div class="flex justify-between text-[9px] text-slate-400 font-bold uppercase mt-1">
+                                    <span>Today: <strong>{{ load.daily_classes }}</strong></span>
+                                    <span>Weekly Total: <strong>{{ load.weekly_classes }}</strong></span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Timetable Matrix -->
+                    <div class="glass-panel rounded-2xl border border-white/80 shadow-card overflow-hidden transition-all duration-300 hover:shadow-card">
+                        <div class="px-6 py-5 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                            <div class="flex items-center gap-3">
+                                <h2 class="text-lg font-bold text-slate-900 tracking-tight"><i class="fa-solid fa-calendar-day text-orange-500"></i> Batch Timetable Matrix</h2>
+                                <span class="bg-slate-950 text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider"><i class="fa-solid fa-database mr-1 text-orange-400"></i> live orm sync</span>
+                            </div>
+                            
+                            <!-- Year Selector Tabs -->
+                            <div class="flex gap-1 bg-slate-200/60 p-1 rounded-xl shrink-0">
+                                <button onclick="switchYearTab('all_years')" id="btn-year-all_years" class="year-tab-btn bg-slate-950 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all duration-300">All Batches</button>
+                                <button onclick="switchYearTab('2nd_year_a')" id="btn-year-2nd_year_a" class="year-tab-btn text-slate-600 hover:text-slate-800 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300">2nd Year (Sec A)</button>
+                                <button onclick="switchYearTab('2nd_year_b')" id="btn-year-2nd_year_b" class="year-tab-btn text-slate-600 hover:text-slate-800 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300">2nd Year (Sec B)</button>
+                                <button onclick="switchYearTab('3rd_year_a')" id="btn-year-3rd_year_a" class="year-tab-btn text-slate-600 hover:text-slate-800 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300">3rd Year (Sec A)</button>
+                                <button onclick="switchYearTab('3rd_year_b')" id="btn-year-3rd_year_b" class="year-tab-btn text-slate-600 hover:text-slate-800 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300">3rd Year (Sec B)</button>
+                                <button onclick="switchYearTab('4th_year')" id="btn-year-4th_year" class="year-tab-btn text-slate-600 hover:text-slate-800 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300">4th Year</button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[700px]">
+                                <thead>
+                                    <tr class="bg-slate-950 text-white text-[10px] font-bold uppercase tracking-[0.15em]">
+                                        <th class="p-4 lg:p-5">Time Slot</th>
+                                        <th class="p-4 lg:p-5">Batch & Sec</th>
+                                        <th class="p-4 lg:p-5">Room</th>
+                                        <th class="p-4 lg:p-5">Subject</th>
+                                        <th class="p-4 lg:p-5">Faculty</th>
+                                        <th class="p-4 lg:p-5">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm bg-white">
+                                    {% if lectures %}
+                                        {% for lecture in lectures %}
+                                        <tr class="border-b border-slate-100 transition-all duration-300 ease-in-out hover:bg-slate-50/80 hover:scale-[1.005] origin-left year-row {% if lecture.is_proxy %}proxy-row-glow{% endif %}"
+                                            data-year="{% if lecture.academic_year == '2nd Year' %}2nd_year_{{ lecture.section|lower }}{% elif lecture.academic_year == '3rd Year' %}3rd_year_{{ lecture.section|lower }}{% else %}4th_year{% endif %}"
+                                            data-lecture-start="{{ lecture.start_time }}"
+                                            data-lecture-end="{{ lecture.end_time }}">
+                                            <td class="p-4 lg:p-5 font-bold text-slate-900 whitespace-nowrap">
+                                                <span class="inline-flex items-center gap-2">
+                                                    <i class="fa-regular fa-clock text-orange-500"></i>
+                                                    {{ lecture.start_time }} – {{ lecture.end_time }}
+                                                </span>
+                                            </td>
+                                            <td class="p-4 lg:p-5">
+                                                <span class="bg-slate-100 text-slate-800 font-extrabold text-xs px-2.5 py-1 rounded-lg border border-slate-200">
+                                                    {{ lecture.academic_year }} (Sec {{ lecture.section }})
+                                                </span>
+                                            </td>
+                                            <td class="p-4 lg:p-5 font-mono text-slate-500 text-xs font-bold">{{ lecture.room_number|default:"Room 302" }}</td>
+                                            <td class="p-4 lg:p-5 font-medium text-slate-700">{{ lecture.task_name }}</td>
+                                            <td class="p-4 lg:p-5">
+                                                {% if lecture.is_proxy %}
+                                                    <div class="flex flex-col gap-1">
+                                                        <span class="inline-flex items-center gap-2 text-orange-700 font-bold">
+                                                            <span class="relative flex h-2 w-2">
+                                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                                            </span>
+                                                            <i class="fa-solid fa-user-ninja"></i>
+                                                            {{ lecture|faculty_display_name }}
+                                                            <span class="text-[9px] bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider shadow-glow-amber">Proxy</span>
+                                                        </span>
+                                                        <span class="text-[11px] text-slate-400 pl-4">Covering <span class="line-through decoration-rose-400">{{ lecture.employee.name }}</span></span>
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-slate-800 font-semibold inline-flex items-center gap-2">
+                                                        <i class="fa-solid fa-user-tie text-slate-400"></i>
+                                                        {{ lecture|faculty_display_name }}
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="p-4 lg:p-5">
+                                                {% if lecture.is_proxy %}
+                                                    <span class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 text-xs font-bold px-3 py-1.5 rounded-full border border-amber-200 shadow-sm">
+                                                        <i class="fa-solid fa-bell animate-pulse"></i> Reminder Queued
+                                                    </span>
+                                                {% else %}
+                                                    <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-full border border-emerald-200">
+                                                        <i class="fa-solid fa-lock text-[10px]"></i> Locked
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="6" class="p-12 text-center">
+                                                <div class="inline-flex flex-col items-center gap-3 text-slate-400">
+                                                    <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center"><i class="fa-solid fa-folder-open text-2xl text-slate-300"></i></div>
+                                                    <p class="font-semibold">No lectures in database for {{ current_day|default:"today" }}.</p>
+                                                    <button onclick="switchTab('upload')" class="text-orange-600 text-sm font-bold hover:underline transition-all">Go to Upload Hub →</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <!-- 👨‍🏫 ════ FACULTY WORKSPACE ════ -->
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        <!-- Left Workspace Panel (Timeline Schedules & Logs) -->
+                        <div class="xl:col-span-2 space-y-6">
+                            <div class="glass-panel rounded-2xl border border-white/80 shadow-card overflow-hidden bg-white">
+                                <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center gap-3">
+                                    <h2 class="text-lg font-bold text-slate-900 tracking-tight"><i class="fa-solid fa-clock text-orange-500 mr-2"></i>My Personalized Schedules & Timelines</h2>
+                                    <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-3.5 py-1.5 rounded-full border border-emerald-200 uppercase tracking-widest flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active Duty</span>
+                                </div>
+                                
+                                <div class="p-6 space-y-4">
+                                    {% if my_lectures %}
+                                        <div class="space-y-4">
+                                            {% for lecture in my_lectures %}
+                                            <div class="border border-slate-200/80 rounded-2xl p-5 bg-white flex items-center justify-between gap-4 transition-all duration-300 hover:border-orange-200 shadow-sm relative origin-left">
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <span class="bg-slate-950 text-white font-mono text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase">{{ lecture.day_of_week }}</span>
+                                                        <span class="bg-orange-100 text-orange-900 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider font-extrabold">{{ lecture.academic_year }} (Sec {{ lecture.section }})</span>
+                                                        <span class="bg-slate-100 text-slate-600 text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-semibold"><i class="fa-solid fa-map-pin mr-1 text-slate-400"></i>{{ lecture.room_number|default:"Room 302" }}</span>
+                                                         {% if lecture.is_proxy %}
+                                                         <span class="bg-rose-100 text-rose-800 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider font-extrabold animate-pulse"><i class="fa-solid fa-user-shield mr-1"></i>Proxy (For: {{ lecture.employee.name }})</span>
+                                                         {% endif %}
+                                                    </div>
+                                                    <h4 class="text-base font-extrabold text-slate-900 tracking-tight mt-2.5">{{ lecture.task_name }}</h4>
+                                                    <p class="text-xs text-slate-400 mt-1 flex items-center gap-2 font-semibold">
+                                                        <i class="fa-regular fa-clock text-slate-500"></i> {{ lecture.start_time }} – {{ lecture.end_time }}
+                                                    </p>
+                                                </div>
+                                                
+                                                <div class="flex flex-col gap-2 shrink-0">
+                                                    <button onclick="openSyllabusModal({{ lecture.pk }}, '{{ lecture.task_name }}')" class="bg-slate-950 hover:bg-slate-800 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md flex items-center gap-1.5">
+                                                        <i class="fa-solid fa-book-open"></i> Log syllabus
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="text-center py-12 text-slate-400">
+                                            <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-calendar-xmark text-slate-300 text-xl"></i></div>
+                                            <p class="font-bold text-slate-500">No scheduled lectures found.</p>
+                                            <p class="text-xs text-slate-400 mt-1">If this is a mistake, contact your HOD to verify details.</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Previous logs -->
+                            {% if my_syllabus_logs %}
+                            <div class="glass-panel rounded-2xl border border-white/80 shadow-card p-6 space-y-4">
+                                <h3 class="text-base font-extrabold text-slate-900 tracking-tight"><i class="fa-solid fa-book text-orange-500 mr-2"></i>My Recent Syllabus Logs</h3>
+                                <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                                    {% for log in my_syllabus_logs %}
+                                    <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm text-xs flex justify-between gap-4 hover:border-orange-100 transition-all">
+                                        <div>
+                                            <p class="font-extrabold text-slate-800">{{ log.schedule.task_name }} — <span class="text-slate-400 font-bold uppercase">{{ log.schedule.academic_year }} (Sec {{ log.schedule.section }})</span></p>
+                                            <p class="text-slate-500 font-semibold mt-1.5">Topic Covered: <strong class="text-slate-800 font-bold">{{ log.topic_covered }}</strong></p>
+                                        </div>
+                                        <div class="text-right shrink-0 text-slate-400 font-bold uppercase font-mono text-[10px]">
+                                            {{ log.date|date:"d M Y" }}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Right Panel: AI Swaps & Profiles -->
+                        <div class="space-y-6">
+                            <!-- AI Swap Proposals Portal -->
+                            <div class="glass-panel rounded-2xl border border-white/80 shadow-card p-6 space-y-4">
+                                <h3 class="text-base font-extrabold text-slate-900 tracking-tight flex items-center gap-2"><i class="fa-solid fa-arrows-rotate text-orange-500 animate-spin-slow"></i> AI-Powered Swap Portal</h3>
+                                <p class="text-xs text-slate-400 leading-relaxed">Need to coordinate a schedule change? Propose a mutual swap with another professor. The request will automatically route to the HOD approvals inbox.</p>
+                                
+                                <div class="space-y-4 pt-2">
+                                    <div>
+                                        <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wide mb-1.5">1. Select My Lecture Slot</label>
+                                        <select id="swap-my-slot" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700">
+                                            {% for lecture in my_lectures %}
+                                            <option value="{{ lecture.pk }}">{{ lecture.day_of_week }} @ {{ lecture.start_time }} — {{ lecture.task_name }} [{{ lecture.academic_year }}]</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wide mb-1.5">2. Target Faculty Name</label>
+                                        <input type="text" id="swap-target-teacher" placeholder="e.g. Meha Shrivastava, Dheeraj Namdev" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wide mb-1.5">3. Target Lecture Start Time</label>
+                                        <input type="text" id="swap-target-slot-time" placeholder="e.g. 14:10, 09:35" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700">
+                                    </div>
+                                    
+                                    <button onclick="submitSwapRequest()" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs py-3.5 rounded-xl transition-all shadow-md hover:shadow-glow-orange mt-2 uppercase tracking-wider">
+                                        Submit Swap Proposal
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Omnichannel alerted Preferences -->
+                            <div class="glass-panel rounded-2xl border border-white/80 shadow-card p-6 space-y-4">
+                                <h3 class="text-base font-extrabold text-slate-900 tracking-tight"><i class="fa-solid fa-bell text-orange-500 mr-2"></i>Omnichannel Preferences</h3>
+                                <p class="text-xs text-slate-400 leading-relaxed">Configure your notification credentials to receive simulated WhatsApp pushes and Telegram bot broadcasts alongside standard email alerts.</p>
+                                
+                                <div class="space-y-4 pt-2">
+                                    <div>
+                                        <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wide mb-1.5">Mobile Phone (WhatsApp Gateway)</label>
+                                        <input type="text" id="pref-phone" value="{{ profile.phone|default:'' }}" placeholder="+91 9111987654" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-mono">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wide mb-1.5">Telegram Broadcast Chat ID</label>
+                                        <input type="text" id="pref-telegram" value="{{ profile.telegram_chat_id|default:'' }}" placeholder="e.g. tg_883492" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-700 font-mono">
+                                    </div>
+                                    
+                                    <button onclick="saveProfileAlertPreferences()" class="w-full bg-slate-950 hover:bg-slate-800 text-white font-extrabold text-xs py-3.5 rounded-xl transition-all shadow-md mt-2 uppercase tracking-wider">
+                                        Save Alert Preferences
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </section>
+
+                <!-- ═══ TAB 2: AI ASSISTANT ═══ -->
+                <section id="chat" class="tab-content hidden flex flex-col h-[calc(100vh-7rem)] lg:h-[calc(100vh-5.5rem)] glass-panel rounded-2xl border border-white/80 shadow-card overflow-hidden">
+                    <div class="bg-slate-950 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800 shrink-0">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-glow-orange animate-pulse">
+                                <i class="fa-solid fa-wand-magic-sparkles text-white text-base"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">ChronosAI Intelligent Assistant</h2>
+                                <p class="text-[11px] text-slate-400">Autonomous Scheduling Engine • Real-time OCR & Live Sync</p>
+                            </div>
+                        </div>
+                        <button onclick="clearChat()" class="text-xs font-semibold text-slate-400 hover:text-rose-400 px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-all duration-300">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Clear
+                        </button>
+                    </div>
+
+                    <div class="relative flex-1 min-h-0">
+                        <div id="chat-stream" class="absolute inset-0 p-6 overflow-y-auto space-y-4 chat-stream-grid scroll-smooth">
+                            <div class="flex gap-3 max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center shrink-0 shadow-glow-orange animate-pulse">
+                                    <i class="fa-solid fa-robot text-xs text-white"></i>
+                                </div>
+                                <div class="bg-white p-4 rounded-2xl rounded-tl-sm border border-slate-200/80 shadow-sm text-sm leading-relaxed text-slate-700">
+                                    Hello Professor! I am <strong class="text-orange-600">ChronosAI</strong>, your autonomous scheduling agent tied to Django ORM models and Celery notification pipelines. How can I assist with class matrices today?
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Scroll to bottom FAB -->
+                        <button id="scroll-bottom-btn" onclick="scrollChatToBottom(true)" class="hidden absolute bottom-4 right-4 w-11 h-11 rounded-full bg-slate-900 text-white shadow-lg hover:bg-orange-600 hover:shadow-glow-orange transition-all duration-300 ease-in-out hover:scale-110 z-10 items-center justify-center" aria-label="Scroll to latest message">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                    </div>
+
+                    <!-- Quick prompts -->
+                    <div class="px-4 lg:px-6 py-3 border-t border-slate-100 flex gap-2 overflow-x-auto bg-white/80 shrink-0">
+                        <button onclick="insertPrompt('all lectures of thursday')" class="chip-btn">📅 Thursday Schedule</button>
+                        <button onclick="insertPrompt('Who is free on Monday at 10:35?')" class="chip-btn">🔍 Free Teachers</button>
+                        <button onclick="insertPrompt('assign Mr. Dheeraj Namdev as proxy for Meha mams 09:35 lecture')" class="chip-btn">⚡ Proxy Assign</button>
+                    </div>
+
+                    <div class="p-5 border-t border-slate-100/60 bg-gradient-to-t from-slate-50/90 to-white/70 backdrop-blur-md flex gap-3 items-center shrink-0">
+                        <div class="relative flex-1 flex items-center">
+                            <input type="text" id="chat-input" placeholder="Ask ChronosAI anything about schedules, proxies, or faculty…" class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-200/80 bg-white/90 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 shadow-sm focus:shadow-md transition-all duration-300 text-slate-800" onkeydown="if(event.key==='Enter') executeChatQuery()">
+                            
+                            <button onclick="toggleVoiceInput()" id="chat-mic-btn" class="absolute right-3 text-slate-400 hover:text-orange-500 p-2.5 rounded-xl transition-all duration-300 flex items-center justify-center" title="Voice Input">
+                                <i class="fa-solid fa-microphone text-lg" id="chat-mic-icon"></i>
+                            </button>
+                        </div>
+                        
+                        <button onclick="executeChatQuery()" id="chat-send-btn" class="bg-slate-950 hover:bg-gradient-to-r hover:from-orange-600 hover:to-amber-500 text-white px-6 py-4 rounded-2xl font-bold text-sm transition-all duration-300 shadow-md hover:shadow-glow-orange hover:scale-102 flex items-center gap-2 shrink-0">
+                            <span>Send</span>
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- ═══ TAB 3: FACULTY MATRIX ═══ -->
+                <section id="directory" class="tab-content hidden space-y-6">
+                    <div class="glass-panel rounded-2xl border border-white/80 shadow-card p-6 lg:p-8">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                            <div>
+                                <h2 class="text-xl font-extrabold text-slate-900 tracking-tight"><i class="fa-solid fa-users-viewfinder text-orange-500 mr-2"></i>Live Faculty Matrix</h2>
+                                <p class="text-sm text-slate-500 mt-1">Instant availability snapshot · CSE-AIDS Section A</p>
+                            </div>
+                            <div class="relative w-full lg:w-80">
+                                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" id="faculty-search" placeholder="Search faculty… e.g. Meha, Dheeraj" oninput="filterFacultyGrid(this.value)" class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 transition-all duration-300">
+                            </div>
+                        </div>
+
+                        <div id="faculty-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            {% for faculty in faculty_directory %}
+                            <div class="faculty-card border border-slate-200/80 rounded-2xl p-5 bg-white flex items-center justify-between gap-3 transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-card hover:border-orange-200"
+                                 data-faculty-name="{{ faculty.name|lower }}">
+                                <div class="min-w-0">
+                                    <h4 class="font-bold text-slate-900 truncate">{{ faculty.name }}</h4>
+                                    <p class="text-[11px] text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">SISTec · {{ faculty.department }}</p>
+                                </div>
+                                {% if faculty.status_class == 'rose' %}
+                                <span class="shrink-0 bg-rose-50 text-rose-700 text-[10px] font-bold px-3 py-1.5 rounded-full border border-rose-200 uppercase tracking-wide"><i class="fa-solid fa-chalkboard-user mr-1"></i>{{ faculty.status }}</span>
+                                {% else %}
+                                <span class="shrink-0 bg-emerald-50 text-emerald-700 text-[10px] font-bold px-3 py-1.5 rounded-full border border-emerald-200 uppercase tracking-wide"><i class="fa-solid fa-circle-check mr-1"></i>{{ faculty.status }}</span>
+                                {% endif %}
+                            </div>
+                            {% empty %}
+                            <p class="text-slate-400 text-sm col-span-full text-center py-12">No faculty records. Upload a timetable via Upload Hub.</p>
+                            {% endfor %}
+                        </div>
+                        <p id="faculty-no-results" class="hidden text-center text-slate-400 text-sm py-8 font-medium">No faculty matching your search.</p>
+                    </div>
+                </section>
+
+                <!-- ═══ TAB 4: UPLOAD HUB ═══ -->
+                <section id="upload" class="tab-content hidden space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div id="upload-dropzone" class="glass-panel rounded-2xl border-2 border-dashed border-slate-300 p-8 flex flex-col items-center text-center justify-center transition-all duration-300 hover:border-orange-400 hover:shadow-glow-orange hover:scale-[1.01] group cursor-pointer relative">
+                            <input type="file" id="timetable-file-input" accept="image/png, image/jpeg, image/jpg" class="hidden">
+                            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-100 to-amber-50 text-orange-500 flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform duration-300 shadow-inner">
+                                <i class="fa-solid fa-file-image"></i>
+                            </div>
+                            <h3 class="font-extrabold text-slate-900 text-lg tracking-tight">Upload Timetable Blueprint</h3>
+                            <p class="text-xs text-slate-500 mt-2 max-w-xs leading-relaxed">PNG · JPG structural schedule images for EasyOCR + Llama 3.3 extraction pipeline.</p>
+                            <button id="upload-browse-btn" class="mt-6 bg-slate-950 hover:bg-gradient-to-r hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md transition-all duration-300 hover:scale-102 hover:shadow-glow-orange uppercase tracking-wider">Browse Files</button>
+                        </div>
+
+                        <div class="lg:col-span-2 glass-panel rounded-2xl border border-white/80 shadow-card p-6 lg:p-8 space-y-5">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <h3 class="font-extrabold text-slate-900 tracking-tight"><i class="fa-solid fa-microchip text-orange-500 mr-2"></i>OCR + LLM Processing Terminal</h3>
+                                <span id="ocr-progress-label" class="text-xs font-mono font-bold text-orange-600">0%</span>
+                            </div>
+
+                            <!-- Neon progress bar -->
+                            <div class="h-2.5 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                                <div id="ocr-progress-bar" class="h-full progress-neon rounded-full transition-all duration-300 ease-linear" style="width: 0%"></div>
+                            </div>
+
+                            <div class="bg-slate-950 rounded-xl p-5 text-xs font-mono space-y-2 shadow-inner border border-slate-800 min-h-[180px] max-h-[220px] overflow-y-auto" id="ocr-terminal">
+                                <p class="text-slate-500">// ChronosAI ingestion pipeline ready. Awaiting image stream…</p>
+                                <p class="text-amber-400 hidden ocr-log-line" id="ocr-log-1">[INFO] Ingesting binary matrix structure from uploaded canvas…</p>
+                                <p class="text-sky-400 hidden ocr-log-line" id="ocr-log-2">[OCR Engine] EasyOCR bounding-box segmentation extraction complete.</p>
+                                <p class="text-violet-400 hidden ocr-log-line" id="ocr-log-3">[LLM Router] Routing tokens to Llama 3.3 70B Structural Processor…</p>
+                                <p class="text-emerald-400 hidden ocr-log-line" id="ocr-log-4">[SUCCESS] Validated JSON schedule object returned from Groq node!</p>
+                            </div>
+
+                            <button onclick="simulateOCRProcessing()" id="ocr-run-btn" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs py-4 rounded-xl transition-all duration-300 tracking-[0.2em] uppercase shadow-lg hover:shadow-glow-orange hover:scale-[1.01]">
+                                Simulate Parsing Execution Pipeline
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ═══ TIMETABLE PREVIEW & EDIT SECTION ═══ -->
+                    <div id="preview-container" class="hidden glass-panel rounded-2xl border border-white/80 shadow-card p-6 lg:p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div class="flex flex-wrap justify-between items-center gap-4">
+                            <div>
+                                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">
+                                    <i class="fa-solid fa-square-poll-horizontal text-orange-500 mr-2"></i>
+                                    Verified Schedule Preview
+                                </h3>
+                                <p class="text-xs text-slate-500 mt-1">
+                                    Verify or edit the extracted timetable data below. Click any field to edit. Ensure HH:MM time formats.
+                                </p>
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="addScheduleRow()" class="bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/80 text-xs font-bold px-4 py-3 rounded-xl shadow-sm transition-all duration-300 hover:scale-102 flex items-center gap-2">
+                                    <i class="fa-solid fa-plus text-orange-500"></i> Add Row
+                                </button>
+                                <button onclick="saveScheduleToDatabase()" id="confirm-save-btn" class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-glow-orange transition-all duration-300 hover:scale-102 uppercase tracking-wider flex items-center gap-2">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> Confirm & Save to Database
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-left border-collapse min-w-[700px]">
+                                <thead>
+                                    <tr class="bg-slate-950 text-white text-[10px] font-bold uppercase tracking-[0.15em]">
+                                        <th class="p-4">Day</th>
+                                        <th class="p-4">Start Time</th>
+                                        <th class="p-4">End Time</th>
+                                        <th class="p-4">Year</th>
+                                        <th class="p-4">Sem</th>
+                                        <th class="p-4">Sec</th>
+                                        <th class="p-4">Room</th>
+                                        <th class="p-4">Subject</th>
+                                        <th class="p-4">Faculty</th>
+                                        <th class="p-4 text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="preview-table-body" class="text-sm bg-white divide-y divide-slate-100">
+                                    <!-- Dynamic rows will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ═══ TAB 5: KIOSK BOARD ═══ -->
+                <section id="kiosk" class="tab-content hidden min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-6 md:p-10 relative overflow-hidden">
+                    <!-- Glowing ambient blobs -->
+                    <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-orange-600/10 via-amber-500/5 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-violet-600/10 via-fuchsia-500/5 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+
+                    <!-- Header Area (Exit / Clock / Info) -->
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 z-10 shrink-0">
+                        <div>
+                            <div class="flex items-center gap-3 mb-1">
+                                <span class="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-[0_0_15px_rgba(249,115,22,0.4)]">Digital Signage</span>
+                                <span class="bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> Live Broadcast
+                                </span>
+                            </div>
+                            <h2 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">ChronosAI Kiosk Portal</h2>
+                            <p class="text-xs text-slate-400">SISTec Engineering Campus · Department of CSE-AIDS</p>
+                        </div>
+                        
+                        <!-- Exit Kiosk Trigger -->
+                        <button onclick="switchTab('dashboard')" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white px-5 py-3 rounded-xl font-bold text-xs transition-all duration-300 flex items-center gap-2 self-start md:self-center shadow-lg hover:scale-102">
+                            <i class="fa-solid fa-right-from-bracket text-orange-500"></i> Exit Kiosk Mode
+                        </button>
+                    </div>
+
+                    <!-- Main Showcase (Split Clock and Schedules) -->
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 my-8 z-10 flex-1 items-stretch">
+                        <!-- Clock & Date Display Card -->
+                        <div class="xl:col-span-1 bg-slate-900/60 border border-slate-800/80 rounded-3xl p-8 flex flex-col justify-center items-center text-center relative overflow-hidden backdrop-blur-md shadow-2xl">
+                            <div class="absolute inset-0 bg-gradient-to-b from-slate-900/20 to-slate-950/40 pointer-events-none"></div>
+                            
+                            <div class="w-20 h-20 bg-gradient-to-tr from-orange-600 to-amber-500 rounded-2xl flex items-center justify-center text-white text-3xl mb-6 shadow-[0_0_30px_rgba(234,88,12,0.3)] animate-pulse">
+                                <i class="fa-regular fa-clock"></i>
+                            </div>
+
+                            <p class="text-[11px] font-bold uppercase tracking-[0.3em] text-orange-500 mb-2">Standard Indian Time</p>
+                            <!-- Huge Neon Clock -->
+                            <div id="kiosk-live-clock" class="text-4xl sm:text-5xl font-black font-mono tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-yellow-200 drop-shadow-[0_0_20px_rgba(249,115,22,0.4)] my-1">
+                                00:00:00
+                            </div>
+                            <p id="kiosk-live-date" class="text-sm font-bold text-slate-400 uppercase tracking-widest mt-2">
+                                Tuesday, May 26, 2026
+                            </p>
+                            
+                            <div class="mt-8 pt-8 border-t border-slate-800/80 w-full grid grid-cols-2 gap-4">
+                                <div class="bg-slate-950/50 border border-slate-800 p-4 rounded-2xl text-center">
+                                    <p class="text-[10px] text-slate-500 uppercase tracking-wider">Active Day</p>
+                                    <p class="text-sm font-black text-slate-200 mt-1">{{ current_day|default:"Today" }}</p>
+                                </div>
+                                <div class="bg-slate-950/50 border border-slate-800 p-4 rounded-2xl text-center">
+                                    <p class="text-[10px] text-slate-500 uppercase tracking-wider">Scheduled Lectures</p>
+                                    <p class="text-sm font-black text-slate-200 mt-1">{{ total_lectures_today|default:0 }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Schedules Container -->
+                        <div class="xl:col-span-2 flex flex-col gap-6 justify-between">
+                            <!-- Section: ONGOING CLASS -->
+                            <div class="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-6 flex-1 flex flex-col justify-between backdrop-blur-md shadow-2xl min-h-[300px]">
+                                <div>
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h3 class="text-xs font-black uppercase tracking-[0.25em] text-emerald-400 flex items-center gap-2">
+                                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                                            Current Time Slot Status
+                                        </h3>
+                                        <span id="kiosk-current-slot-badge" class="bg-slate-950 border border-slate-800 text-slate-300 font-mono text-xs font-bold px-3.5 py-1.5 rounded-full">
+                                            --:--
+                                        </span>
+                                    </div>
+                                    
+                                    <div id="kiosk-ongoing-list" class="space-y-4">
+                                        <!-- Ongoing class rows will be dynamically populated here -->
+                                        <div class="flex items-center justify-center p-8 text-slate-500 text-sm font-medium">
+                                            <i class="fa-solid fa-spinner animate-spin mr-2 text-orange-500"></i> Calculating schedules...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section: UPCOMING CLASS PEEK -->
+                            <div class="bg-slate-900/40 border border-slate-800/60 rounded-3xl p-6 backdrop-blur-md shadow-xl">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-xs font-black uppercase tracking-[0.25em] text-amber-500 flex items-center gap-2">
+                                        <i class="fa-solid fa-forward text-xs"></i>
+                                        Upcoming Slot Sneak Peek
+                                    </h3>
+                                    <span id="kiosk-upcoming-slot-badge" class="bg-slate-950 border border-slate-850 text-slate-400 font-mono text-xs font-bold px-3 py-1 rounded-full">
+                                        --:--
+                                    </span>
+                                </div>
+                                
+                                <div id="kiosk-upcoming-list" class="space-y-3">
+                                    <!-- Upcoming schedule elements -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scrolling Ticker Ribbon (Bottom Banner) -->
+                    <div class="w-full bg-orange-600/10 border-t border-orange-500/20 backdrop-blur-lg -mx-6 md:-mx-10 shrink-0 relative overflow-hidden h-14 flex items-center shadow-[0_-10px_30px_rgba(249,115,22,0.05)]">
+                        <div class="absolute left-0 top-0 bottom-0 bg-slate-950 w-16 z-20 pointer-events-none"></div>
+                        <div class="absolute right-0 top-0 bottom-0 bg-slate-950 w-16 z-20 pointer-events-none"></div>
+                        
+                        <div class="bg-gradient-to-r from-orange-600 to-amber-500 text-white font-extrabold text-[11px] px-6 py-4 uppercase tracking-widest shrink-0 h-full flex items-center gap-2 z-10 shadow-lg select-none">
+                            <i class="fa-solid fa-bolt animate-bounce"></i> Real-time Ticker
+                        </div>
+                        
+                        <div class="flex-1 overflow-hidden relative w-full h-full flex items-center">
+                            <!-- CSS Infinite Scroll Marquee -->
+                            <div id="kiosk-ticker-marquee" class="absolute whitespace-nowrap flex items-center gap-16 animate-[marquee_25s_linear_infinite] pl-8">
+                                <span class="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-orange-500 rounded-full"></span> Welcome to SISTec Advanced AI Timetable Suite
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+    {% endif %}
+
+    <style>
+        .chip-btn {
+            @apply bg-white hover:bg-gradient-to-r hover:from-orange-500 hover:to-amber-500 hover:text-white hover:border-transparent transition-all duration-300 ease-in-out hover:scale-[1.03] hover:shadow-[0_4px_12px_rgba(249,115,22,0.2)] text-xs font-semibold px-4 py-2 rounded-full text-slate-600 shrink-0 border border-slate-200/80;
+        }
+    </style>
+
+    <script>
+        const CHAT_HISTORY_KEY = 'chatHistory_' + '{{ request.user.username|default:"anonymous" }}';
+
+        /* ── Utilities ── */
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        function compareTimeHHMM(a, b) {
+            return a.localeCompare(b);
+        }
+
+        /* ── Live clock & greeting ── */
+        function updateLiveClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            const el = document.getElementById('live-clock');
+            if (el) el.textContent = `${h}:${m}:${s}`;
+
+            const hour = now.getHours();
+            let greeting = 'Good Evening';
+            if (hour >= 5 && hour < 12) greeting = 'Good Morning';
+            else if (hour >= 12 && hour < 17) greeting = 'Good Afternoon';
+            else if (hour >= 17 && hour < 21) greeting = 'Good Evening';
+            else greeting = 'Good Night';
+
+            const greetEl = document.getElementById('context-greeting');
+            if (greetEl) {
+                const userDisplay = greetEl.getAttribute('data-user-display') || 'Professor';
+                greetEl.textContent = `${greeting}, ${userDisplay}`;
+            }
+        }
+
+        /* ── Lecture progress bar ── */
+        function updateLectureProgress() {
+            const now = new Date();
+            const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const rows = document.querySelectorAll('[data-lecture-end]');
+            const total = parseInt(document.body.dataset.totalLectures || rows.length || '0', 10);
+            let completed = 0;
+
+            rows.forEach(row => {
+                const end = row.dataset.lectureEnd;
+                if (end && compareTimeHHMM(end, currentHHMM) <= 0) completed++;
+            });
+
+            const remaining = Math.max(0, total - completed);
+            const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            const bar = document.getElementById('lecture-progress-bar');
+            const pctEl = document.getElementById('progress-percent');
+            const compEl = document.getElementById('completed-count');
+            const remEl = document.getElementById('remaining-count');
+
+            if (bar) bar.style.width = `${pct}%`;
+            if (pctEl) pctEl.textContent = `${pct}%`;
+            if (compEl) compEl.textContent = completed;
+            if (remEl) remEl.textContent = remaining;
+        }
+
+        /* ── Sidebar / tabs ── */
+        function toggleMobileSidebar(open) {
+            const sidebar = document.getElementById('app-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (open) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('nav-item-active', 'text-white');
+                btn.classList.add('text-slate-400');
+            });
+
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.add('nav-item-active', 'text-white');
+                activeBtn.classList.remove('text-slate-400');
+            }
+
+            toggleMobileSidebar(false);
+
+            // Fullscreen layout adjustments for Hallway Kiosk Board
+            const sidebar = document.getElementById('app-sidebar');
+            const header = document.querySelector('header');
+            const mainContainer = document.querySelector('main');
+
+            if (tabId === 'kiosk') {
+                if (sidebar) sidebar.classList.add('lg:hidden', 'hidden');
+                if (header) header.classList.add('hidden');
+                if (mainContainer) {
+                    mainContainer.className = "flex-1 w-full m-0 p-0";
+                }
+                // Trigger immediate rendering of kiosk state
+                updateKioskClock();
+                updateKioskSchedules();
+            } else {
+                if (sidebar) sidebar.classList.remove('lg:hidden', 'hidden');
+                if (header) header.classList.remove('hidden');
+                if (mainContainer) {
+                    mainContainer.className = "flex-1 p-4 lg:p-8 max-w-[1600px] w-full mx-auto space-y-6";
+                }
+            }
+
+            if (tabId === 'chat') {
+                setTimeout(() => scrollChatToBottom(false), 100);
+            }
+        }
+
+        /* ── Chat helpers ── */
+        function insertPrompt(text) {
+            const input = document.getElementById('chat-input');
+            input.value = text;
+            input.focus();
+            switchTab('chat');
+        }
+
+        function clearChat() {
+            document.getElementById('chat-stream').innerHTML = `
+                <div class="flex gap-3 max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center shrink-0 shadow-glow-orange animate-pulse">
+                        <i class="fa-solid fa-robot text-xs text-white"></i>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl rounded-tl-sm border border-slate-200/80 shadow-sm text-sm leading-relaxed text-slate-700">
+                        Hello! I am <strong class="text-orange-600">ChronosAI</strong>. How can I help you adjust faculty schedules or assign proxies today?
+                    </div>
+                </div>`;
+            sessionStorage.removeItem(CHAT_HISTORY_KEY);
+        }
+
+        function showTypingIndicator() {
+            const stream = document.getElementById('chat-stream');
+            const existing = document.getElementById('typing-indicator');
+            if (existing) return;
+
+            stream.insertAdjacentHTML('beforeend', `
+                <div id="typing-indicator" class="flex gap-3 max-w-3xl">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center shrink-0 shadow-glow-orange animate-pulse">
+                        <i class="fa-solid fa-robot text-xs text-white"></i>
+                    </div>
+                    <div class="bg-white px-5 py-4 rounded-2xl rounded-tl-sm border border-slate-200/80 shadow-sm flex items-center gap-1.5">
+                        <span class="typing-dot w-2 h-2 rounded-full bg-orange-500 animate-bounce-dot" style="animation-delay: 0s"></span>
+                        <span class="typing-dot w-2 h-2 rounded-full bg-orange-400 animate-bounce-dot" style="animation-delay: 0.15s"></span>
+                        <span class="typing-dot w-2 h-2 rounded-full bg-amber-400 animate-bounce-dot" style="animation-delay: 0.3s"></span>
+                        <span class="text-xs text-orange-500 font-bold tracking-wide ml-2 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-notch animate-spin text-[10px] text-orange-500"></i> ChronosAI Typing…
+                        </span>
+                    </div>
+                </div>`);
+            scrollChatToBottom(false);
+        }
+
+        function hideTypingIndicator() {
+            const el = document.getElementById('typing-indicator');
+            if (el) el.remove();
+        }
+
+        function scrollChatToBottom(smooth) {
+            const stream = document.getElementById('chat-stream');
+            if (!stream) return;
+            stream.scrollTo({ top: stream.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+            updateScrollBottomBtn();
+        }
+
+        function updateScrollBottomBtn() {
+            const stream = document.getElementById('chat-stream');
+            const btn = document.getElementById('scroll-bottom-btn');
+            if (!stream || !btn) return;
+            const nearBottom = stream.scrollHeight - stream.scrollTop - stream.clientHeight < 120;
+            if (nearBottom) {
+                btn.classList.add('hidden');
+                btn.classList.remove('flex');
+            } else {
+                btn.classList.remove('hidden');
+                btn.classList.add('flex');
+            }
+        }
+
+        function executeChatQuery() {
+            const inputField = document.getElementById('chat-input');
+            const queryText = inputField.value.trim();
+            if (!queryText) return;
+
+            const streamCanvas = document.getElementById('chat-stream');
+            const safeQuery = escapeHtml(queryText);
+
+            streamCanvas.insertAdjacentHTML('beforeend', `
+                <div class="flex gap-3 max-w-3xl ml-auto flex-row-reverse animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 text-white flex items-center justify-center shrink-0 shadow-md border border-slate-750">
+                        <i class="fa-solid fa-user text-xs"></i>
+                    </div>
+                    <div class="chat-bubble-user p-4 text-sm font-medium max-w-[85%]">${safeQuery}</div>
+                </div>`);
+
+            inputField.value = '';
+            sessionStorage.setItem(CHAT_HISTORY_KEY, streamCanvas.innerHTML);
+            scrollChatToBottom(true);
+            showTypingIndicator();
+
+            fetch('/api/chat/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: queryText })
+            })
+            .then(res => res.json())
+            .then(data => {
+                hideTypingIndicator();
+                let rawResponse = data.response || data.reply || data.error || 'Execution processed.';
+                // Filter out internal <think>...</think> tags and everything inside them
+                rawResponse = rawResponse.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                const aiResponse = escapeHtml(rawResponse);
+                streamCanvas.insertAdjacentHTML('beforeend', `
+                    <div class="flex gap-3 max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center shrink-0 shadow-glow-orange animate-pulse">
+                            <i class="fa-solid fa-robot text-xs text-white"></i>
+                        </div>
+                        <div class="chat-bubble-ai p-4 text-sm leading-relaxed text-slate-700 whitespace-pre-line max-w-[90%]">${aiResponse}</div>
+                    </div>`);
+                
+                sessionStorage.setItem(CHAT_HISTORY_KEY, streamCanvas.innerHTML);
+                scrollChatToBottom(true);
+
+                // Detect proxy or swap completion to trigger live dashboard refresh
+                const lowerResponse = aiResponse.toLowerCase();
+                const isProxySuccess = 
+                    lowerResponse.includes('proxy assigned') || 
+                    lowerResponse.includes('assigned as proxy') ||
+                    lowerResponse.includes('assigned successfully') ||
+                    (lowerResponse.includes('proxy') && (lowerResponse.includes('success') || lowerResponse.includes('completed') || lowerResponse.includes('done')));
+                
+                const isSwapSuccess = 
+                    lowerResponse.includes('swapped') || 
+                    lowerResponse.includes('swap completed') || 
+                    lowerResponse.includes('swap transaction completed') ||
+                    (lowerResponse.includes('swap') && (lowerResponse.includes('success') || lowerResponse.includes('completed') || lowerResponse.includes('done')));
+                
+                if (isProxySuccess || isSwapSuccess) {
+                    sessionStorage.setItem('activeTab', 'chat');
+                    
+                    // Show a subtle toast overlay in the chat to warn the user of auto-sync
+                    streamCanvas.insertAdjacentHTML('beforeend', `
+                        <div class="flex gap-3 max-w-3xl mt-2 animate-bounce">
+                            <div class="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xs shrink-0 shadow-md"><i class="fa-solid fa-arrows-rotate animate-spin"></i></div>
+                            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl text-sm font-semibold shadow-sm">
+                                🔄 Live schedule change detected! Auto-refreshing and syncing dashboard in 2 seconds...
+                            </div>
+                        </div>`);
+                    sessionStorage.setItem(CHAT_HISTORY_KEY, streamCanvas.innerHTML);
+                    scrollChatToBottom(true);
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2200);
+                }
+            })
+            .catch(err => {
+                hideTypingIndicator();
+                console.error('Network interface error:', err);
+                streamCanvas.insertAdjacentHTML('beforeend', `
+                    <div class="flex gap-3 max-w-3xl">
+                        <div class="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center text-xs shrink-0 shadow-md">!</div>
+                        <div class="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-2xl text-sm">Connection error. Please verify the Django server is running.</div>
+                    </div>`);
+                sessionStorage.setItem(CHAT_HISTORY_KEY, streamCanvas.innerHTML);
+                scrollChatToBottom(true);
+            });
+        }
+
+        /* ── Faculty search filter ── */
+        function filterFacultyGrid(query) {
+            const q = query.trim().toLowerCase();
+            const cards = document.querySelectorAll('.faculty-card');
+            let visible = 0;
+
+            cards.forEach(card => {
+                const name = card.dataset.facultyName || '';
+                const match = !q || name.includes(q);
+                card.classList.toggle('hidden', !match);
+                if (match) visible++;
+            });
+
+            const noResults = document.getElementById('faculty-no-results');
+            if (noResults) {
+                noResults.classList.toggle('hidden', visible > 0 || cards.length === 0);
+            }
+        }
+
+        /* ── OCR simulation with synced progress bar ── */
+        let ocrRunning = false;
+        let ocrRafId = null;
+        let ocrTimeoutIds = [];
+
+        function _ocrClearTimers() {
+            if (ocrRafId) {
+                cancelAnimationFrame(ocrRafId);
+                ocrRafId = null;
+            }
+            ocrTimeoutIds.forEach(id => clearTimeout(id));
+            ocrTimeoutIds = [];
+        }
+
+        function simulateOCRProcessing() {
+            // Always restart cleanly (prevents desync on repeated clicks)
+            _ocrClearTimers();
+            ocrRunning = true;
+
+            const lines = ['ocr-log-1', 'ocr-log-2', 'ocr-log-3', 'ocr-log-4'];
+            const progressBar = document.getElementById('ocr-progress-bar');
+            const progressLabel = document.getElementById('ocr-progress-label');
+            const runBtn = document.getElementById('ocr-run-btn');
+            const terminal = document.getElementById('ocr-terminal');
+
+            lines.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+
+            if (progressBar) progressBar.style.width = '0%';
+            if (progressLabel) progressLabel.textContent = '0%';
+            if (runBtn) {
+                runBtn.disabled = true;
+                runBtn.classList.add('opacity-70', 'cursor-not-allowed');
+                runBtn.innerText = 'Processing…';
+            }
+
+            // Smooth progress timeline (ms) and milestone log reveals (percent)
+            const DURATION_MS = 5200; // realistic demo pacing
+            const MILESTONES = [
+                { pct: 12, id: 'ocr-log-1' },
+                { pct: 42, id: 'ocr-log-2' },
+                { pct: 74, id: 'ocr-log-3' },
+                { pct: 100, id: 'ocr-log-4' },
+            ];
+
+            const revealed = new Set();
+            const startedAt = performance.now();
+
+            function revealLog(id) {
+                const logEl = document.getElementById(id);
+                if (!logEl) return;
+                logEl.classList.remove('hidden');
+                logEl.classList.add('animate-pulse');
+                ocrTimeoutIds.push(setTimeout(() => logEl.classList.remove('animate-pulse'), 700));
+                if (terminal) terminal.scrollTop = terminal.scrollHeight;
+            }
+
+            function tick(now) {
+                const elapsed = Math.max(0, now - startedAt);
+                // easeInOutCubic for premium feel
+                const t = Math.min(1, elapsed / DURATION_MS);
+                const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+                const pct = Math.min(100, Math.round(eased * 100));
+
+                if (progressBar) progressBar.style.width = `${pct}%`;
+                if (progressLabel) progressLabel.textContent = `${pct}%`;
+
+                // Reveal terminal logs in sync with progress
+                MILESTONES.forEach(m => {
+                    if (pct >= m.pct && !revealed.has(m.id)) {
+                        revealed.add(m.id);
+                        revealLog(m.id);
+                    }
+                });
+
+                if (t < 1) {
+                    ocrRafId = requestAnimationFrame(tick);
+                } else {
+                    ocrRunning = false;
+                    if (runBtn) {
+                        runBtn.disabled = false;
+                        runBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+                        runBtn.innerText = 'Simulate Parsing Execution Pipeline';
+                    }
+
+                    // Reveal preview table using simulated mock data
+                    const mockData = [
+                        {"day": "Monday", "start_time": "09:35", "end_time": "10:35", "subject": "Computer Networks Lab", "faculty": "Mr. Dheeraj Namdev / Ms. Ruchi Jain"},
+                        {"day": "Monday", "start_time": "10:35", "end_time": "11:35", "subject": "Computer Networks Lab", "faculty": "Mr. Dheeraj Namdev / Ms. Ruchi Jain"},
+                        {"day": "Monday", "start_time": "11:35", "end_time": "12:35", "subject": "Communication Skills", "faculty": "Onaiza Ahmed"},
+                        {"day": "Monday", "start_time": "12:35", "end_time": "13:35", "subject": "Communication Skills", "faculty": "Mr. Badal Hate"},
+                        {"day": "Monday", "start_time": "14:10", "end_time": "15:10", "subject": "Data Mining & Warehousing", "faculty": "Mr. Arihant Jain"},
+                        {"day": "Monday", "start_time": "15:10", "end_time": "16:10", "subject": "Competitive Programming", "faculty": "Ms. Ruchi Jain / Ms. Madhuri Walia"},
+                        {"day": "Saturday", "start_time": "09:35", "end_time": "10:35", "subject": "Internet of Things Lab", "faculty": "Ms. Meha Shrivastava"},
+                        {"day": "Saturday", "start_time": "10:35", "end_time": "11:35", "subject": "Internet of Things Lab", "faculty": "Ms. Meha Shrivastava"},
+                        {"day": "Saturday", "start_time": "11:35", "end_time": "12:35", "subject": "Minor Project II", "faculty": "Ms. Ruchi Jain / Mr. Dheeraj Namdev"},
+                        {"day": "Saturday", "start_time": "12:35", "end_time": "13:35", "subject": "Minor Project II", "faculty": "Ms. Ruchi Jain / Mr. Dheeraj Namdev"},
+                        {"day": "Saturday", "start_time": "14:10", "end_time": "15:10", "subject": "Deep Learning", "faculty": "Dr. Vasima Khan / Ms. Madhuri Walia"},
+                        {"day": "Saturday", "start_time": "15:10", "end_time": "16:10", "subject": "Deep Learning", "faculty": "Dr. Vasima Khan / Ms. Madhuri Walia"},
+                    ];
+                    setTimeout(() => {
+                        displaySchedulePreview(mockData);
+                    }, 600);
+                }
+            }
+
+            // Kick off animation and guarantee first log quickly
+            revealLog('ocr-log-1');
+            ocrRafId = requestAnimationFrame(tick);
+        }
+
+        /* ── Real Ingestion & Editable Schedule Preview ── */
+        window.extractedScheduleRows = [];
+
+        function displaySchedulePreview(rows) {
+            window.extractedScheduleRows = (rows || []).map(row => ({
+                day: row.day || 'Monday',
+                start_time: row.start_time || '09:35',
+                end_time: row.end_time || '10:35',
+                academic_year: row.academic_year || '3rd Year',
+                semester: row.semester || 6,
+                section: row.section || 'A',
+                room_number: row.room_number || 'Room 302',
+                subject: row.subject || '',
+                faculty: row.faculty || ''
+            }));
+            renderPreviewTable();
+            
+            const container = document.getElementById('preview-container');
+            if (container) {
+                container.classList.remove('hidden');
+                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function renderPreviewTable() {
+            const tbody = document.getElementById('preview-table-body');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            if (window.extractedScheduleRows.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="p-8 text-center text-slate-400 font-medium">
+                            No rows in schedule. Click "+ Add Row" to create one.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const years = ['2nd Year', '3rd Year', '4th Year'];
+            const semesters = [4, 6, 8];
+
+            window.extractedScheduleRows.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-slate-100 bg-white hover:bg-slate-50/50 transition-all duration-200';
+                
+                // Day Select
+                let daySelectHtml = `<select onchange="updateRowField(${index}, 'day', this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 w-full min-w-[130px]">`;
+                daysOfWeek.forEach(d => {
+                    const selected = (row.day || '').toLowerCase() === d.toLowerCase() ? 'selected' : '';
+                    daySelectHtml += `<option value="${d}" ${selected}>${d}</option>`;
+                });
+                daySelectHtml += `</select>`;
+
+                // Year Select
+                let yearSelectHtml = `<select onchange="updateRowField(${index}, 'academic_year', this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 w-full min-w-[120px]">`;
+                years.forEach(y => {
+                    const selected = (row.academic_year || '3rd Year') === y ? 'selected' : '';
+                    yearSelectHtml += `<option value="${y}" ${selected}>${y}</option>`;
+                });
+                yearSelectHtml += `</select>`;
+
+                // Sem Select
+                let semSelectHtml = `<select onchange="updateRowField(${index}, 'semester', parseInt(this.value, 10))" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 w-full min-w-[80px]">`;
+                semesters.forEach(s => {
+                    const selected = parseInt(row.semester || 6, 10) === s ? 'selected' : '';
+                    semSelectHtml += `<option value="${s}" ${selected}>Sem ${s}</option>`;
+                });
+                semSelectHtml += `</select>`;
+
+                tr.innerHTML = `
+                    <td class="p-4">${daySelectHtml}</td>
+                    <td class="p-4">
+                        <input type="text" value="${row.start_time || ''}" placeholder="09:35" oninput="updateRowField(${index}, 'start_time', this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 w-24 text-center">
+                    </td>
+                    <td class="p-4">
+                        <input type="text" value="${row.end_time || ''}" placeholder="10:35" oninput="updateRowField(${index}, 'end_time', this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 w-24 text-center">
+                    </td>
+                    <td class="p-4">${yearSelectHtml}</td>
+                    <td class="p-4">${semSelectHtml}</td>
+                    <td class="p-4">
+                        <input type="text" value="${row.section || 'A'}" placeholder="A" oninput="updateRowField(${index}, 'section', this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 w-16 text-center">
+                    </td>
+                    <td class="p-4">
+                        <input type="text" value="${row.room_number || 'Room 302'}" placeholder="CS-Lab 1" oninput="updateRowField(${index}, 'room_number', this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 w-28 text-center">
+                    </td>
+                    <td class="p-4">
+                        <input type="text" value="${row.subject || ''}" placeholder="Subject name" oninput="updateRowField(${index}, 'subject', this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 w-full min-w-[180px]">
+                    </td>
+                    <td class="p-4">
+                        <input type="text" value="${row.faculty || ''}" placeholder="Faculty name" oninput="updateRowField(${index}, 'faculty', this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 w-full min-w-[180px]">
+                    </td>
+                    <td class="p-4 text-center">
+                        <button onclick="deleteScheduleRow(${index})" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-2.5 rounded-xl transition-all duration-300" title="Delete Row">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateRowField(index, field, value) {
+            if (window.extractedScheduleRows[index]) {
+                window.extractedScheduleRows[index][field] = value;
+            }
+        }
+
+        function deleteScheduleRow(index) {
+            window.extractedScheduleRows.splice(index, 1);
+            renderPreviewTable();
+        }
+
+        function addScheduleRow() {
+            window.extractedScheduleRows.push({
+                day: 'Monday',
+                start_time: '09:35',
+                end_time: '10:35',
+                academic_year: '3rd Year',
+                semester: 6,
+                section: 'A',
+                room_number: 'Room 302',
+                subject: '',
+                faculty: ''
+            });
+            renderPreviewTable();
+            const tbody = document.getElementById('preview-table-body');
+            if (tbody && tbody.lastElementChild) {
+                tbody.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function saveScheduleToDatabase() {
+            const rows = window.extractedScheduleRows;
+            if (!rows || rows.length === 0) {
+                alert('No schedule entries to save.');
+                return;
+            }
+
+            for (let i = 0; i < rows.length; i++) {
+                const r = rows[i];
+                if (!r.day || !r.start_time || !r.subject || !r.faculty || !r.academic_year || !r.section) {
+                    alert(`Row ${i + 1} has empty values. Please fill in all fields (Day, Start Time, Year, Section, Subject, Faculty).`);
+                    return;
+                }
+            }
+
+            const btn = document.getElementById('confirm-save-btn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Saving…`;
+
+            fetch('/api/confirm/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ rows: rows })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+
+                if (data.success) {
+                    alert(`Success! Saved ${data.entries_saved} schedule entries to database.`);
+                    
+                    const container = document.getElementById('preview-container');
+                    if (container) container.classList.add('hidden');
+                    
+                    const progressBar = document.getElementById('ocr-progress-bar');
+                    if (progressBar) progressBar.style.width = '0%';
+                    const progressLabel = document.getElementById('ocr-progress-label');
+                    if (progressLabel) progressLabel.textContent = '0%';
+                    
+                    const terminal = document.getElementById('ocr-terminal');
+                    if (terminal) {
+                        terminal.innerHTML = `<p class="text-slate-500">// ChronosAI ingestion pipeline ready. Awaiting image stream…</p>`;
+                    }
+
+                    // Reload page to show fresh database schedule on Dashboard
+                    window.location.reload();
+                } else {
+                    alert('Error saving schedule: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                console.error('Error saving schedule:', err);
+                alert('Failed to save to database.');
+            });
+        }
+
+        function uploadTimetableFile(file) {
+            if (!file) return;
+
+            _ocrClearTimers();
+            ocrRunning = true;
+
+            const progressBar = document.getElementById('ocr-progress-bar');
+            const progressLabel = document.getElementById('ocr-progress-label');
+            const runBtn = document.getElementById('ocr-run-btn');
+            const terminal = document.getElementById('ocr-terminal');
+
+            if (progressBar) progressBar.style.width = '0%';
+            if (progressLabel) progressLabel.textContent = '0%';
+            if (runBtn) {
+                runBtn.disabled = true;
+                runBtn.classList.add('opacity-70', 'cursor-not-allowed');
+                runBtn.innerText = 'Processing real timetable…';
+            }
+
+            if (terminal) {
+                terminal.innerHTML = `
+                    <p class="text-slate-500">// ChronosAI ingestion pipeline active.</p>
+                    <p class="text-amber-400">[INFO] Ingesting binary matrix structure: ${file.name} (${Math.round(file.size / 1024)} KB)</p>
+                `;
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                if (progress < 85) {
+                    progress += Math.random() * 5;
+                    if (progress > 85) progress = 85;
+                    
+                    const pct = Math.round(progress);
+                    if (progressBar) progressBar.style.width = `${pct}%`;
+                    if (progressLabel) progressLabel.textContent = `${pct}%`;
+                    
+                    if (pct > 15 && !document.getElementById('real-log-ocr')) {
+                        appendTerminalLog('real-log-ocr', '[OCR Engine] Launching EasyOCR bounding-box segmentation extraction...', 'text-sky-400');
+                    }
+                    if (pct > 50 && !document.getElementById('real-log-llm')) {
+                        appendTerminalLog('real-log-llm', '[LLM Router] Routing extracted tokens to Llama-3.3-70B Structural Processor...', 'text-violet-400');
+                    }
+                }
+            }, 300);
+
+            function appendTerminalLog(id, text, colorClass) {
+                if (!terminal) return;
+                const p = document.createElement('p');
+                p.id = id;
+                p.className = colorClass;
+                p.textContent = text;
+                terminal.appendChild(p);
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+
+            fetch('/api/upload/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => {
+                clearInterval(progressInterval);
+                if (!res.ok) {
+                    return res.json().then(errData => {
+                        throw new Error(errData.error || 'Server error ' + res.status);
+                    });
+                }
+                return res.json();
+            })
+            .then(data => {
+                progress = 100;
+                if (progressBar) progressBar.style.width = '100%';
+                if (progressLabel) progressLabel.textContent = '100%';
+                
+                appendTerminalLog('real-log-success', '[SUCCESS] Dynamic timetable extracted from Groq and successfully parsed!', 'text-emerald-400');
+                
+                ocrRunning = false;
+                if (runBtn) {
+                    runBtn.disabled = false;
+                    runBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+                    runBtn.innerText = 'Simulate Parsing Execution Pipeline';
+                }
+
+                setTimeout(() => {
+                    displaySchedulePreview(data.rows);
+                }, 800);
+            })
+            .catch(err => {
+                clearInterval(progressInterval);
+                ocrRunning = false;
+                
+                if (progressBar) progressBar.style.width = '0%';
+                if (progressLabel) progressLabel.textContent = '0%';
+                
+                if (runBtn) {
+                    runBtn.disabled = false;
+                    runBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+                    runBtn.innerText = 'Simulate Parsing Execution Pipeline';
+                }
+
+                appendTerminalLog('real-log-error', `[ERROR] Extraction pipeline failed: ${err.message}`, 'text-rose-500 font-bold');
+                alert('OCR Ingestion Failed: ' + err.message);
+            });
+        }
+
+        /* ── Voice-to-Intent (Web Speech Recognition) ── */
+        let recognition = null;
+        let isListening = false;
+
+        function initVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                console.warn("Web Speech API is not supported in this browser.");
+                const micBtn = document.getElementById('chat-mic-btn');
+                if (micBtn) {
+                    micBtn.style.display = 'none'; // hide if not supported
+                }
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = false; // Stop listening when user pauses
+            recognition.interimResults = false; // Only final results
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isListening = true;
+                const micBtn = document.getElementById('chat-mic-btn');
+                const micIcon = document.getElementById('chat-mic-icon');
+                if (micBtn && micIcon) {
+                    micBtn.className = "bg-rose-600 text-white p-3.5 rounded-xl text-sm transition-all duration-300 flex items-center justify-center shrink-0 border border-rose-500 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.7)]";
+                    micIcon.className = "fa-solid fa-microphone-lines text-base";
+                }
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                const micBtn = document.getElementById('chat-mic-btn');
+                const micIcon = document.getElementById('chat-mic-icon');
+                if (micBtn && micIcon) {
+                    micBtn.className = "bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 p-3.5 rounded-xl text-sm transition-all duration-300 flex items-center justify-center shrink-0 border border-slate-200";
+                    micIcon.className = "fa-solid fa-microphone text-base";
+                }
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                const inputField = document.getElementById('chat-input');
+                if (inputField && transcript) {
+                    inputField.value = transcript;
+                    // Automatically execute query after a slight pause
+                    setTimeout(() => {
+                        executeChatQuery();
+                    }, 500);
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                recognition.stop();
+            };
+        }
+
+        function toggleVoiceInput() {
+            if (!recognition) {
+                initVoiceRecognition();
+            }
+            if (!recognition) return;
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        /* ── Kiosk Mode Dynamic Populator ── */
+        function updateKioskClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            const displayTime = `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+            
+            const clockEl = document.getElementById('kiosk-live-clock');
+            if (clockEl) clockEl.textContent = displayTime;
+
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const dateEl = document.getElementById('kiosk-live-date');
+            if (dateEl) {
+                dateEl.textContent = `${days[now.getDay()]} · ${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+            }
+        }
+
+        function updateKioskSchedules() {
+            const now = new Date();
+            const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            // Extract today's lectures from the dashboard DOM
+            const rows = document.querySelectorAll('#dashboard tbody tr');
+            const lectures = [];
+
+            rows.forEach(row => {
+                const start = row.dataset.lectureStart;
+                const end = row.dataset.lectureEnd;
+                if (!start || !end) return;
+
+                // Extract subject
+                const subjectCell = row.cells[1];
+                const subject = subjectCell ? subjectCell.innerText.trim() : '';
+
+                // Extract faculty
+                const facultyCell = row.cells[2];
+                let faculty = '';
+                let isProxy = false;
+                let originalFaculty = '';
+
+                if (facultyCell) {
+                    isProxy = row.className.includes('proxy-row-glow');
+                    if (isProxy) {
+                        const boldTextEl = facultyCell.querySelector('.text-orange-700');
+                        faculty = boldTextEl ? boldTextEl.innerText.replace('Proxy', '').trim() : '';
+                        const lineThroughEl = facultyCell.querySelector('.line-through');
+                        originalFaculty = lineThroughEl ? lineThroughEl.innerText.trim() : '';
+                    } else {
+                        faculty = facultyCell.innerText.trim();
+                    }
+                }
+
+                lectures.push({ start, end, subject, faculty, isProxy, originalFaculty });
+            });
+
+            // Find ongoing and upcoming lectures
+            const ongoing = [];
+            const upcoming = [];
+
+            lectures.forEach(l => {
+                if (compareTimeHHMM(l.start, currentHHMM) <= 0 && compareTimeHHMM(currentHHMM, l.end) < 0) {
+                    ongoing.push(l);
+                } else if (compareTimeHHMM(currentHHMM, l.start) < 0) {
+                    upcoming.push(l);
+                }
+            });
+
+            // Sort upcoming by start time
+            upcoming.sort((a, b) => compareTimeHHMM(a.start, b.start));
+
+            // Render Ongoing List
+            const ongoingContainer = document.getElementById('kiosk-ongoing-list');
+            const ongoingSlotBadge = document.getElementById('kiosk-current-slot-badge');
+            
+            if (ongoingContainer) {
+                if (ongoing.length === 0) {
+                    ongoingContainer.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-10 text-center text-slate-500">
+                            <div class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-3">
+                                <i class="fa-solid fa-moon text-slate-600 text-lg"></i>
+                            </div>
+                            <p class="font-bold text-slate-400">No Class Ongoing Right Now</p>
+                            <p class="text-xs text-slate-500 mt-1">Currently in recess or outside scheduled slots.</p>
+                        </div>
+                    `;
+                    if (ongoingSlotBadge) ongoingSlotBadge.textContent = 'RECESS';
+                } else {
+                    let html = '';
+                    ongoing.forEach(l => {
+                        const proxyBadge = l.isProxy 
+                            ? `<span class="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-glow-amber">Proxy Active</span>` 
+                            : `<span class="bg-slate-950 border border-slate-800 text-slate-400 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Locked Slot</span>`;
+                        
+                        const coverInfo = l.isProxy
+                            ? `<p class="text-xs text-amber-500/80 mt-1 flex items-center gap-1 font-medium"><i class="fa-solid fa-user-ninja"></i> Covering for ${l.originalFaculty}</p>`
+                            : '';
+
+                        const borderClass = l.isProxy
+                            ? 'border-amber-500/40 bg-amber-950/20 shadow-[0_0_20px_rgba(245,158,11,0.1)]'
+                            : 'border-slate-800 bg-slate-950/30';
+
+                        html += `
+                            <div class="border ${borderClass} rounded-2xl p-5 flex items-center justify-between gap-4 transition-all duration-300 hover:scale-[1.01]">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h4 class="text-lg font-extrabold text-white tracking-tight leading-snug">${l.subject}</h4>
+                                        ${proxyBadge}
+                                    </div>
+                                    <p class="text-sm font-semibold text-slate-300 mt-1.5 flex items-center gap-2">
+                                        <i class="fa-solid fa-chalkboard-user text-slate-500"></i> ${l.faculty}
+                                    </p>
+                                    ${coverInfo}
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Timings</p>
+                                    <p class="text-base font-black font-mono text-orange-400 mt-1">${l.start} – ${l.end}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    ongoingContainer.innerHTML = html;
+                    if (ongoingSlotBadge) ongoingSlotBadge.textContent = `${ongoing[0].start} – ${ongoing[0].end}`;
+                }
+            }
+
+            // Render Upcoming List
+            const upcomingContainer = document.getElementById('kiosk-upcoming-list');
+            const upcomingSlotBadge = document.getElementById('kiosk-upcoming-slot-badge');
+            
+            if (upcomingContainer) {
+                if (upcoming.length === 0) {
+                    upcomingContainer.innerHTML = `
+                        <p class="text-center py-6 text-slate-500 text-xs font-semibold">
+                            No more upcoming lectures scheduled for today.
+                        </p>
+                    `;
+                    if (upcomingSlotBadge) upcomingSlotBadge.textContent = 'DONE';
+                } else {
+                    let html = '';
+                    const nextLectures = upcoming.slice(0, 2);
+                    nextLectures.forEach(l => {
+                        const proxyIndicator = l.isProxy 
+                            ? `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>` 
+                            : `<span class="w-2 h-2 rounded-full bg-slate-700"></span>`;
+                        
+                        html += `
+                            <div class="bg-slate-950/40 border border-slate-900 rounded-2xl p-4 flex items-center justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        ${proxyIndicator}
+                                        <p class="text-sm font-bold text-slate-200 truncate leading-snug">${l.subject}</p>
+                                    </div>
+                                    <p class="text-xs text-slate-400 mt-1 flex items-center gap-1"><i class="fa-solid fa-user text-[10px] text-slate-600"></i> ${l.faculty}</p>
+                                </div>
+                                <div class="text-right shrink-0 font-mono text-xs font-black text-amber-500">
+                                    ${l.start}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    upcomingContainer.innerHTML = html;
+                    if (upcomingSlotBadge) upcomingSlotBadge.textContent = `Starts @ ${upcoming[0].start}`;
+                }
+            }
+
+            // Dynamically generate marquee ticker ribbon text based on proxies and swaps
+            const marqueeContainer = document.getElementById('kiosk-ticker-marquee');
+            if (marqueeContainer) {
+                let marqueeHTML = `
+                    <span class="text-sm font-bold text-orange-400 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span> SISTEC DIGITAL ERP LIVE BROADCAST
+                    </span>
+                    <span class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-slate-500 rounded-full"></span> Today's Weekday: ${document.querySelector('header p.text-slate-500') ? document.querySelector('header p.text-slate-500').innerText.split('·')[0].trim() : 'Active Day'}
+                    </span>
+                `;
+                
+                const proxies = lectures.filter(l => l.isProxy);
+                if (proxies.length > 0) {
+                    proxies.forEach(p => {
+                        marqueeHTML += `
+                            <span class="text-sm font-bold text-amber-300 flex items-center gap-2">
+                                <span class="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></span> ALERT: Proxy coverage active: ${p.faculty} is taking ${p.subject} at ${p.start}–${p.end} instead of ${p.originalFaculty}.
+                            </span>
+                        `;
+                    });
+                } else {
+                    marqueeHTML += `
+                        <span class="text-sm font-semibold text-emerald-400 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Schedule Status: Stable. No active proxy substitutions.
+                        </span>
+                    `;
+                }
+
+                marqueeHTML += `
+                    <span class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-slate-500 rounded-full"></span> For swap requests, faculty can use ChronosAI voice interface or chat assistant.
+                    </span>
+                `;
+
+                marqueeContainer.innerHTML = marqueeHTML + marqueeHTML;
+            }
+        }
+
+        /* ── Authentication, Approvals & Syllabus Logging (Phase 3 Extra Interactions) ── */
+        function switchAuthTab(tab) {
+            const loginBtn = document.getElementById('tab-login-btn');
+            const registerBtn = document.getElementById('tab-register-btn');
+            const loginPanel = document.getElementById('auth-login-panel');
+            const registerPanel = document.getElementById('auth-register-panel');
+
+            if (tab === 'login') {
+                loginBtn.className = "flex-1 text-center py-2.5 rounded-xl text-xs font-bold transition-all duration-300 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg";
+                registerBtn.className = "flex-1 text-center py-2.5 rounded-xl text-xs font-bold transition-all duration-300 text-slate-400 hover:text-slate-200";
+                loginPanel.classList.remove('hidden');
+                registerPanel.classList.add('hidden');
+            } else {
+                registerBtn.className = "flex-1 text-center py-2.5 rounded-xl text-xs font-bold transition-all duration-300 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg";
+                loginBtn.className = "flex-1 text-center py-2.5 rounded-xl text-xs font-bold transition-all duration-300 text-slate-400 hover:text-slate-200";
+                loginPanel.classList.add('hidden');
+                registerPanel.classList.remove('hidden');
+            }
+        }
+
+        function toggleRegisterRole() {
+            const roleSelect = document.getElementById('register-role');
+            const employeeWrapper = document.getElementById('register-employee-wrapper');
+            if (roleSelect.value === 'Faculty') {
+                employeeWrapper.classList.remove('hidden');
+            } else {
+                employeeWrapper.classList.add('hidden');
+            }
+        }
+
+        function filterEmployeesByDepartment() {
+            const deptSelect = document.getElementById('register-department');
+            const empSelect = document.getElementById('register-employee');
+            const selectedDept = deptSelect.value;
+
+            // Clear options except placeholder
+            empSelect.innerHTML = '<option value="" disabled selected class="bg-slate-950 text-slate-400">-- Choose your name --</option>';
+
+            const dataElement = document.getElementById('employees-data');
+            if (!dataElement) return;
+
+            try {
+                const allEmployees = JSON.parse(dataElement.textContent);
+                // Show all registered employees regardless of selected department, appending department tags
+                allEmployees.forEach(emp => {
+                    const opt = document.createElement('option');
+                    opt.value = emp.id;
+                    opt.textContent = `${emp.name} (${emp.department})`;
+                    opt.className = "bg-slate-950 text-slate-200";
+                    empSelect.appendChild(opt);
+                });
+            } catch (err) {
+                console.error("Failed to parse employee JSON data:", err);
+            }
+        }
+
+        function performRegister() {
+            const usernameInput = document.getElementById('register-username');
+            const emailInput = document.getElementById('register-email');
+            const passwordInput = document.getElementById('register-password');
+            const roleSelect = document.getElementById('register-role');
+            const deptSelect = document.getElementById('register-department');
+            const employeeSelect = document.getElementById('register-employee');
+
+            if (!usernameInput || !emailInput || !passwordInput || !roleSelect || !deptSelect || !employeeSelect) return;
+
+            const username = usernameInput.value.trim();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+            const role = roleSelect.value;
+            const department = deptSelect.value;
+            const employee_id = employeeSelect.value;
+
+            if (!username || !password) {
+                alert('Please enter both a username and a strong password.');
+                return;
+            }
+
+            if (!department) {
+                alert('Please select your department.');
+                return;
+            }
+
+            if (role === 'Faculty' && !employee_id) {
+                alert('Please select your faculty profile from the dropdown.');
+                return;
+            }
+
+            const btn = document.getElementById('register-btn');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = 'PROVISIONING USER SECURELY...';
+
+            fetch('/api/auth/register/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password, role, department, employee_id })
+            })
+            .then(res => res.json().then(data => ({ status: res.status, data })))
+            .then(({ status, data }) => {
+                if (status === 200 && data.success) {
+                    window.location.reload();
+                } else {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                    alert(data.error || 'Registration failed. Please check your entries.');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerText = originalText;
+                console.error('Registration error:', err);
+                alert('Connection error occurred while registering your account.');
+            });
+        }
+
+        function performLogin() {
+            const usernameInput = document.getElementById('login-username');
+            const passwordInput = document.getElementById('login-password');
+            if (!usernameInput || !passwordInput) return;
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!username || !password) {
+                alert('Please enter both username and password.');
+                return;
+            }
+
+            const btn = document.getElementById('login-btn');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = 'VERIFYING CREDENTIALS...';
+
+            fetch('/api/auth/login/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(res => res.json().then(data => ({ status: res.status, data })))
+            .then(({ status, data }) => {
+                if (status === 200 && data.success) {
+                    window.location.reload();
+                } else {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                    alert(data.error || 'Authentication failed. Please try again.');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerText = originalText;
+                console.error('Login error:', err);
+                alert('Connection error occurred while logging in.');
+            });
+        }
+
+        function performLogout() {
+            if (!confirm('Are you sure you want to log out of the portal?')) return;
+            fetch('/api/auth/logout/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Logout failed.');
+                }
+            })
+            .catch(err => {
+                console.error('Logout error:', err);
+                alert('Connection error occurred.');
+            });
+        }
+
+        function switchYearTab(yearId) {
+            // Update active button state
+            document.querySelectorAll('.year-tab-btn').forEach(btn => {
+                btn.className = "year-tab-btn text-slate-600 hover:text-slate-800 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300";
+            });
+            const activeBtn = document.getElementById('btn-year-' + yearId);
+            if (activeBtn) {
+                activeBtn.className = "year-tab-btn bg-slate-950 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all duration-300";
+            }
+
+            // Filter rows
+            document.querySelectorAll('.year-row').forEach(row => {
+                const rowYear = row.getAttribute('data-year');
+                if (yearId === 'all_years' || rowYear === yearId) {
+                    row.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+        }
+
+        function openSyllabusModal(pk, name) {
+            const modal = document.getElementById('syllabus-modal');
+            const idInput = document.getElementById('syllabus-schedule-id');
+            const subjectInput = document.getElementById('syllabus-subject-display');
+            const topicInput = document.getElementById('syllabus-topic');
+
+            if (modal && idInput && subjectInput && topicInput) {
+                idInput.value = pk;
+                subjectInput.value = name;
+                topicInput.value = '';
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeSyllabusModal() {
+            const modal = document.getElementById('syllabus-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function submitSyllabusLog() {
+            const idInput = document.getElementById('syllabus-schedule-id');
+            const topicInput = document.getElementById('syllabus-topic');
+            if (!idInput || !topicInput) return;
+
+            const scheduleId = idInput.value;
+            const topicCovered = topicInput.value.trim();
+
+            if (!topicCovered) {
+                alert('Please detail what topics were covered today.');
+                return;
+            }
+
+            fetch('/api/syllabus-log/create/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    schedule_id: scheduleId,
+                    topic_covered: topicCovered
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || 'Syllabus log recorded successfully!');
+                    closeSyllabusModal();
+                    window.location.reload();
+                } else {
+                    alert('Error saving syllabus: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                console.error('Error logging syllabus:', err);
+                alert('Failed to log syllabus progress.');
+            });
+        }
+
+        function submitSwapRequest() {
+            const mySlotSelect = document.getElementById('swap-my-slot');
+            const targetTeacherInput = document.getElementById('swap-target-teacher');
+            const targetSlotTimeInput = document.getElementById('swap-target-slot-time');
+
+            if (!mySlotSelect || !targetTeacherInput || !targetSlotTimeInput) return;
+
+            const scheduleSlot = mySlotSelect.value;
+            const targetTeacher = targetTeacherInput.value.trim();
+            const targetSlotTime = targetSlotTimeInput.value.trim();
+
+            if (!scheduleSlot || !targetTeacher || !targetSlotTime) {
+                alert('Please fill out all fields in the AI swap coordinator form.');
+                return;
+            }
+
+            fetch('/api/swap-request/create/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    schedule_slot: scheduleSlot,
+                    target_teacher: targetTeacher,
+                    target_slot: targetSlotTime
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || 'Swap request proposed successfully!');
+                    targetTeacherInput.value = '';
+                    targetSlotTimeInput.value = '';
+                    window.location.reload();
+                } else {
+                    alert('Error proposing swap: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                console.error('Error proposing swap:', err);
+                alert('Failed to submit swap request.');
+            });
+        }
+
+        function approveSwapRequest(pk) {
+            if (!confirm('Are you sure you want to approve this swap request? Both timetables will be permanently updated.')) return;
+
+            fetch('/api/swap-request/action/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    request_id: pk,
+                    action: 'approve'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || 'Swap request approved!');
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                console.error('Error approving swap:', err);
+                alert('Failed to approve swap request.');
+            });
+        }
+
+        function rejectSwapRequest(pk) {
+            if (!confirm('Are you sure you want to decline this swap request?')) return;
+
+            fetch('/api/swap-request/action/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    request_id: pk,
+                    action: 'reject'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || 'Swap request declined.');
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                console.error('Error rejecting swap:', err);
+                alert('Failed to decline swap request.');
+            });
+        }
+
+        function saveProfileAlertPreferences() {
+            const phoneInput = document.getElementById('pref-phone');
+            const telegramInput = document.getElementById('pref-telegram');
+            if (!phoneInput || !telegramInput) return;
+
+            const phone = phoneInput.value.trim();
+            const telegram = telegramInput.value.trim();
+
+            fetch('/api/profile/update-alerts/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    phone: phone,
+                    telegram_chat_id: telegram
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || 'Omnichannel alert preferences successfully updated!');
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                console.error('Error saving alert preferences:', err);
+                alert('Failed to save alert preferences.');
+            });
+        }
+
+        /* ── Init ── */
+        document.addEventListener('DOMContentLoaded', () => {
+            updateLiveClock();
+            updateLectureProgress();
+            setInterval(updateLiveClock, 1000);
+            setInterval(updateLectureProgress, 30000);
+
+            // Kiosk loops
+            updateKioskClock();
+            updateKioskSchedules();
+            setInterval(updateKioskClock, 1000);
+            setInterval(updateKioskSchedules, 15000);
+
+            // Restore chat history if exists
+            const savedChat = sessionStorage.getItem(CHAT_HISTORY_KEY);
+            if (savedChat) {
+                const chatStream = document.getElementById('chat-stream');
+                if (chatStream) {
+                    chatStream.innerHTML = savedChat;
+                    setTimeout(() => scrollChatToBottom(false), 50);
+                }
+            }
+
+            // Restore active tab if saved
+            const savedTab = sessionStorage.getItem('activeTab');
+            if (savedTab) {
+                switchTab(savedTab);
+                sessionStorage.removeItem('activeTab');
+            }
+
+            const chatStream = document.getElementById('chat-stream');
+            if (chatStream) {
+                chatStream.addEventListener('scroll', updateScrollBottomBtn);
+            }
+
+            // Hook up actual file selection and drag-and-drop
+            const dropzone = document.getElementById('upload-dropzone');
+            const fileInput = document.getElementById('timetable-file-input');
+
+            if (dropzone && fileInput) {
+                dropzone.addEventListener('click', (e) => {
+                    if (e.target !== fileInput) {
+                        fileInput.click();
+                    }
+                });
+
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                        uploadTimetableFile(e.target.files[0]);
+                    }
+                });
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropzone.classList.remove('border-slate-300');
+                        dropzone.classList.add('border-orange-500', 'bg-orange-50/10', 'scale-[1.01]', 'shadow-glow-orange');
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropzone.classList.add('border-slate-300');
+                        dropzone.classList.remove('border-orange-500', 'bg-orange-50/10', 'scale-[1.01]', 'shadow-glow-orange');
+                    }, false);
+                });
+
+                dropzone.addEventListener('drop', (e) => {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    if (files && files.length > 0) {
+                        uploadTimetableFile(files[0]);
+                    }
+                }, false);
+            }
+        });
+    </script>
+
+    <!-- ═══ SYLLABUS LOGGING MODAL ═══ -->
+    <div id="syllabus-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden">
+        <div class="glass-panel w-full max-w-md rounded-3xl border border-white/20 p-8 shadow-2xl relative overflow-hidden bg-slate-900 text-white">
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-gradient-to-tr from-orange-600 to-amber-500 rounded-full blur-2xl opacity-30"></div>
+            
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-gradient-to-tr from-orange-500 to-amber-400 p-3 rounded-xl shadow-glow-orange">
+                    <i class="fa-solid fa-book-open text-lg text-white"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-extrabold text-white tracking-tight">Log Syllabus Coverage</h3>
+                    <p class="text-[10px] uppercase tracking-wider text-slate-400 mt-0.5">SISTec Curriculum Logger</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <input type="hidden" id="syllabus-schedule-id">
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Subject / Lecture</label>
+                    <input type="text" id="syllabus-subject-display" readonly class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-300 font-semibold text-sm cursor-not-allowed">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Topic Covered Today</label>
+                    <textarea id="syllabus-topic" rows="3" placeholder="e.g. Introduced Page Replacement Algorithms, LRU vs FIFO" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300"></textarea>
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button onclick="submitSyllabusLog()" class="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs py-3.5 rounded-xl transition-all shadow-md hover:shadow-glow-orange uppercase tracking-wider">
+                        Submit Log
+                    </button>
+                    <button onclick="closeSyllabusModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold text-xs px-6 py-3.5 rounded-xl transition-all uppercase tracking-wider">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

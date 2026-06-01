@@ -1,0 +1,32 @@
+# Python Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# Python compiled files & cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment Variables & Secrets
+.env
+.env.*
+
+# Media uploads (ignores actual uploaded timetable images, keeps folder structure if needed)
+media/timetables/*
+!media/timetables/.gitkeep
+
+# Django Database (Commented out so your 236 seed timetable entries are uploaded, but you can uncomment this to ignore future DB changes)
+# db.sqlite3
+
+# IDEs and OS Metadata
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+.DS_Store
+Thumbs.db

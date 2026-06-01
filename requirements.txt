@@ -1,0 +1,10 @@
+django>=4.2,<5.0
+celery>=5.3,<6.0
+redis>=5.0,<6.0
+groq>=0.9,<1.0
+langchain>=0.2,<0.3
+langchain-groq>=0.1,<0.2
+langchain-core>=0.2,<0.3
+langgraph>=0.1,<0.2
+easyocr>=1.7,<2.0
+Pillow>=10.0,<11.0

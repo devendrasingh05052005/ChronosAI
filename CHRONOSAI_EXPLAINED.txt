@@ -1,0 +1,250 @@
+================================================================================
+  🏆 CHRONOSAI — THE ULTIMATE ARCHITECTURAL & AGENTIC AI CODE GUIDE (A TO Z)
+================================================================================
+
+This document provides a highly comprehensive, step-by-step breakdown of the 
+entire "ChronosAI" scheduling ERP codebase. It details the purpose of each file, 
+walks through the code implementation, and provides a deep dive into the 
+Agentic AI and LangGraph architecture.
+
+---
+
+📖 TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+1. Core Architecture Overview
+2. Core Models Deep Dive (`scheduler_api/models.py`)
+3. Global Router & API Views (`scheduler_api/views.py`)
+4. OCR Ingestion Pipeline (`scheduler_api/utils.py`)
+5. Celery & Omnichannel Notifications Pipeline (`scheduler_api/tasks.py`)
+6. AGENTIC AI & LANGGRAPH ARCHITECTURE (`agent_graph.py` & `agent_tools.py`)
+7. Unified Glassmorphic SPA Layout (`templates/index.html`)
+8. Step-by-Step Operations & Quick Start Guide
+
+================================================================================
+1. CORE ARCHITECTURE OVERVIEW
+================================================================================
+ChronosAI is an autonomous, multi-year Academic ERP designed for departments (like
+CSE-AIDS at SISTec) to manage schedules, proxy allocations, and mutual swaps for 
+2nd, 3rd, and 4th-year batches. 
+
+The application utilizes a hybrid architecture:
+- Backend ERP Framework: Django (using SQLite for persistent relational state).
+- Background Workers: Celery (with Redis or LocMem broker for async alerts).
+- AI Processing Engine: Groq Llama-3.3-70B and EasyOCR (for digitization).
+- Agentic Chatbot Engine: LangGraph + LangChain (acting as the core autonomous brain).
+- Omnichannel Alert Pushes: Simulated SMTP (Email) + WhatsApp + Telegram gateways.
+- Front-End Interface: A premium dark-glassmorphic Single Page Application (SPA).
+
+================================================================================
+2. CORE MODELS DEEP DIVE (`scheduler_api/models.py`)
+================================================================================
+This file defines the database schema representing the academic department.
+
+1. Employee Model:
+   - Represents faculty members.
+   - Fields: `name` (unique).
+   
+2. Schedule Model:
+   - Represents class slots.
+   - Expanded for Multi-Year:
+     * `academic_year`: '2nd Year', '3rd Year', '4th Year' (choices).
+     * `semester`: 4, 6, or 8 (choices).
+     * `section`: 'A' or 'B' (default 'A').
+     * `room_number`: Physical classroom (e.g., "CS-Lab 1", "Room 302").
+   - Baseline Fields:
+     * `employee`: ForeignKey linking the original scheduled teacher.
+     * `day_of_week`: Day of the class (e.g., 'Monday').
+     * `start_time` & `end_time`: Time slot strings normalized to 'HH:MM'.
+     * `task_name`: The course subject name (e.g., "Computer Networks").
+     * `is_proxy`: Boolean flag indicating if a proxy has covered the slot.
+     * `proxy_teacher_name`: Holds the name of the assigned covering faculty.
+
+3. UserProfile Model:
+   - Extends the standard Django `User` model via a one-to-one relationship.
+   - Fields:
+     * `role`: 'HOD' (Admin) or 'Faculty'.
+     * `employee`: ForeignKey to Employee (resolves which faculty logged in).
+     * `phone`: WhatsApp number gateway.
+     * `telegram_chat_id`: Telegram notification channel.
+
+4. SyllabusLog Model:
+   - Faculty uses this to document lesson coverage.
+   - Fields: `schedule` (ForeignKey to Schedule), `date` (auto), `topic_covered`, and `logged_by` (Employee).
+
+5. SwapRequest Model:
+   - Handles the mutual exchange approvals pipeline.
+   - Fields:
+     * `requestor`: Employee initiating the swap.
+     * `target_teacher`: Employee with whom the slot is swapped.
+     * `schedule_slot` & `target_slot`: ForeignKeys pointing to the two Schedule entries.
+     * `status`: 'Pending', 'Approved', 'Rejected'.
+     * `created_at`: DateTime log.
+
+================================================================================
+3. GLOBAL ROUTER & API VIEWS (`scheduler_api/views.py`)
+================================================================================
+Handles standard ERP actions, role-based logins, and approvals:
+
+1. Dynamic Context Builder (`_build_dashboard_context`):
+   - Called by IndexView to load the SPA dashboard context.
+   - For HOD (Admin):
+     * Loads schedules for all three batches (2nd, 3rd, and 4th Years).
+     * Calculates Faculty Fatigue Metric (`(weekly_classes / 15) * 100`) and daily classes count to produce dynamic workloads grids.
+     * Evaluates overlaps across the entire database to render dynamic Conflict Alerts banners.
+     * Loads pending swap requests in the HOD Approvals Queue.
+   - For Faculty:
+     * Filters schedules where the logged-in teacher is the scheduled employee or proxy.
+     * Pulls alert preferences and syllabus logs.
+
+2. Smart Account Seeding (`_ensure_default_users`):
+   - Seeds standard HOD credentials (`hod` / `admin`).
+   - Syncs Employee records with Django logins automatically. It extracts the real first name by stripping generic honorific prefixes (like "Mr.", "Ms.", "Dr.", "Mrs.") and seeds accounts like `prof_meha` or `prof_dheeraj` with default password `faculty123`.
+
+3. ERP Views & Endpoint Handlers:
+   - `AuthLoginView` & `AuthLogoutView`: Logs in/out users using standard django auth.
+   - `SyllabusLogCreateView`: Accepts syllabus entries from the faculty logger.
+   - `ProfileAlertUpdateView`: Saves WhatsApp numbers and Telegram IDs.
+   - `SwapRequestCreateView`: Allows faculty to draft swap requests. Features a smart resolver: if a time string (e.g. "14:10") is passed instead of an ID, it automatically queries the database for the target teacher's slot on the same day.
+   - `SwapRequestActionView`: Allows the HOD to Approve or Reject. Approval swaps the `employee` foreign keys atomically between the two schedule entries, resets proxies, and alerts the teachers via Celery.
+   - `TimetableConfirmView`: Saves verified extracted OCR schedules in a bulk transaction.
+
+================================================================================
+4. OCR INGESTION PIPELINE (`scheduler_api/utils.py`)
+================================================================================
+Enables one-click digitization of raw college schedule image blueprints:
+
+1. OCR segmenter (EasyOCR):
+   - Lazily loads EasyOCR engine on standard CPU threads.
+   - Bounding boxes scan the image grid to segment timetable tokens.
+
+2. Llama-3.3-70B Structural Parser (Groq Node):
+   - Sends the raw extracted text along with a strict system prompt (`OCR_SYSTEM_PROMPT`) containing period maps and faculty correction matrices to Groq.
+   - The LLM parses, cleans, corrects spelling errors (e.g., mapping "Kuchi" to "Ms. Ruchi Jain"), and returns a structured JSON payload directly mapping to the database fields.
+
+================================================================================
+5. CELERY & OMNICHANNEL NOTIFICATIONS PIPELINE (`scheduler_api/tasks.py`)
+================================================================================
+Enables real-time background alert pushes when schedules change:
+
+1. Celery Worker Tasks:
+   - Runs asynchronously to prevent front-end lag.
+   - `send_proxy_alert_email`: Dispatched when a proxy is assigned.
+   - `send_swap_confirmation_email`: Dispatched when the HOD approves a swap.
+
+2. Omnichannel Gateways (WhatsApp & Telegram):
+   - Integrates alongside email SMTP.
+   - Simulates gateway payloads to the WhatsApp gateway (`_simulate_whatsapp_gateway_dispatch`) and Telegram bot (`_simulate_telegram_gateway_dispatch`), printing structured alert cards with time, room, and course details to Celery logs.
+
+================================================================================
+6. AGENTIC AI & LANGGRAPH ARCHITECTURE (`agent_graph.py` & `agent_tools.py`)
+================================================================================
+This is the core autonomous brain of ChronosAI. It allows HODs and faculty to 
+perform operations using plain English or voice commands.
+
+--------------------------------------------------------------------------------
+A. THE AGENTIC GRAPH ROUTER (`agent_graph.py`)
+--------------------------------------------------------------------------------
+1. State Management (`AgentState`):
+   - Utilizes standard LangGraph structures to pass state through nodes.
+   - Holds a list of `messages` which accumulates conversation history.
+
+2. Graph Structure:
+   - State Nodes:
+     * **Agent Node (`call_model`):** Takes active message logs, binds our custom tools (`get_faculty_schedule_tool`, `find_free_faculties_tool`, `assign_proxy_tool`, `get_day_schedule_tool`, `swap_faculty_lectures_tool`, `recommend_proxy_teachers_tool`), and queries the LLM (using `ChatGroq` model `llama-3.1-70b-versatile` or similar).
+     * **Tools Node (`ToolNode`):** Executes any python tool requested by the model.
+   - Routing Logic (`should_continue`):
+     * If the LLM generates a message containing a `tool_calls` request, the router branches to the **Tools Node** (State updates with tool output, then loops back to the Agent Node).
+     * If no tool call is requested, the router branches to `__end__` to output the final answer to the user.
+
+3. System Prompt (`CHRONOS_SYSTEM_PROMPT`):
+   - Explains the ERP matrix rules to Llama.
+   - Instructs the model to extract parameters and invoke the precise database tools.
+
+--------------------------------------------------------------------------------
+B. CORE DATABASE TOOLS DEEP DIVE (`agent_tools.py`)
+--------------------------------------------------------------------------------
+These Python functions are decorated with `@tool` and equipped with rich docstrings.
+LangChain uses these docstrings to describe parameter requirements to the LLM.
+
+1. `get_faculty_schedule_tool(teacher_name, day)`:
+   - Queries database for classes where the teacher is either the scheduled employee or the active proxy on a specific day.
+   - Prints full batch details: `[4th Year Sec A] (Room CS-Lab 1)`.
+
+2. `find_free_faculties_tool(day, time)`:
+   - Resolves teacher availability.
+   - Scans Schedule table to check who has NO active lectures (either regular or proxy) at the given time on that day. Returns the list of free teachers.
+
+3. `assign_proxy_tool(day, time, absent_teacher, proxy_teacher)`:
+   - Autonomous proxy assignment.
+   - Finds the absent teacher's class at that time.
+   - Validates that the proxy teacher is registered and free using `check_teacher_double_booking` across the entire department grid.
+   - Saves the proxy details in the Schedule database and triggers Celery alerts.
+
+4. `get_day_schedule_tool(day)`:
+   - Returns the complete day schedule, grouped by slot, detailing regular and proxy classes.
+
+5. `swap_faculty_lectures_tool(requesting_teacher, target_teacher, day_of_week, requestor_slot, target_slot)`:
+   - **Highly Advanced Mutual Swap Transaction Tool:**
+   - **Step A (Lookup):** Resolves both schedule slots (Requestor Slot & Target Slot) in the database based on day, start time, and teacher name.
+   - **Step B (Two-way Fail-Safe Verification Checks):**
+     * Runs cross-checks to ensure the target teacher has no scheduling conflict (e.g. double booking in other years) during the requesting teacher's slot time.
+     * Runs similar checks to verify the requesting teacher has no conflict during the target teacher's slot time.
+     * If either has an overlap, **aborts transaction** with a conflict message.
+   - **Step C (Atomic SQL Swap Transaction):** Swaps the `employee` ForeignKey mappings between the two schedule entries in a database-level atomic transaction block (`with transaction.atomic()`), cleans up old proxy flags, and triggers async Celery confirmation alerts.
+
+6. `recommend_proxy_teachers_tool(day, time, absent_teacher)`:
+   - **AI Proxy Matchmaker Tool:**
+   - Locates the absent teacher's slot to identify the subject (e.g. "Computer Networks").
+   - Identifies all teachers who are currently free at that time slot.
+   - **Relational Ranks Scoring Engine:**
+     * **Subject Alignment (Points: +15):** Checks if the free teacher has taught this course or a highly similar course on other days.
+     * **Workload Fatigue Balance (Points: up to +18):** Promotes health-work balance by calculating classes taught *across all batches* (2nd, 3rd, 4th Year). Score is calculated as `(6 - daily_classes) * 3`.
+   - Generates a beautifully styled ranked markdown recommendations table showing matching scores, current workloads, and alignment reasoning.
+
+================================================================================
+7. UNIFIED GLASSMORPHIC SPA LAYOUT (`templates/index.html`)
+================================================================================
+A state-of-the-art Single Page Application built using Vanilla CSS + Tailwind:
+
+1. Visual Assets & Styles:
+   - **Dynamic Organic Glow Blobs:** Blur blobs (`blur-[130px]`) float behind content, creating a futuristic visual depth.
+   - **Dark-Glassmorphism overlay (`glass-panel-dark`):** Combines sleek dark slate gradients (`rgba(15,23,42,0.95)` to `rgba(30,41,59,0.9)`) and thin borders for perfect color contrast on the Login screen and HOD Hero Card.
+
+2. Custom Workspaces & Views:
+   - HOD Command Center: Renders workloads heatmaps, conflict warning boxes, approvals logs, and year filter selectors.
+   - Faculty Workspace: Renders timelines, alert widgets, and AI swap forms.
+   - Hallway Kiosk Mode: Designed for 1080p hallway screens. Features a large neon clock, active proxy highlights, recess indicators, and a horizontally scrolling infinite CSS-marquee ticker ribbon.
+   - Voice Controls: Integrated mic controls that use standard Web Speech API to capture speech, populate input, and trigger queries.
+
+================================================================================
+8. STEP-BY-STEP OPERATIONS & QUICK START GUIDE
+================================================================================
+Follow this guide to operate the system:
+
+1. Start Server:
+   Run `python manage.py runserver` and navigate to `http://127.0.0.1:8000/`.
+
+2. Login as HOD:
+   - Username: `hod` | Password: `admin`
+   - You will see the HOD Command Center.
+   - Go to "Upload Hub", click "Simulate Parsing Execution Pipeline" or drop a timetable image. easyOCR and Llama will extract the entries.
+   - Edit the Year, Sem, Sec, and Room fields inside the Verified Schedule Preview table.
+   - Click "Confirm & Save to Database". The timetable is now loaded!
+   - You will see the workloads heatmaps, conflict checkers, and the full schedule populate instantly.
+
+3. Login as Faculty:
+   - Logout from HOD, and log in as `prof_meha` with password `faculty123`.
+   - You will see her personalized workspace timeline showing her classes.
+   - Type topics (e.g. "Subnetting and Routing") in the "Log Syllabus" modal.
+   - Fill out the "AI-Powered Swap Portal" form (e.g., select Meha's slot, target name: "Arihant Jain", target slot: "10:35") and submit.
+
+4. HOD Swap Approval:
+   - Log back in as `hod`.
+   - Look at the "Swap Request Approvals Queue" box. The swap request from Meha to Arihant is waiting!
+   - Click "Approve Swap". The timetables are atomically swapped, and Celery dispatches simulated confirmations to WhatsApp, Telegram, and Email!
+
+5. Chatbot Agent Interactions:
+   - Go to "AI Assistant".
+   - Ask: "Who is free on Monday at 10:35?" or "Recommend a proxy for Meha Ma'am's Monday 09:35 lecture."
+   - The chatbot calls LangGraph tools, resolves conflicts, and gives beautifully structured responses!
+================================================================================
