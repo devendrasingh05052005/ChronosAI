@@ -23,6 +23,13 @@ from scheduler_api.agent_tools import (
     search_subject_schedule_tool,
 )
 
+# -------------------------------------------------------------
+# PRESENTATION MODE CONFIGURATION
+# True = Use 'qwen/qwen3-32b' as PRIMARY (Super fast response times!)
+# False = Use 'llama-3.3-70b-versatile' as PRIMARY (Higher reasoning/precision!)
+# -------------------------------------------------------------
+USE_QWEN_AS_PRIMARY = True
+
 
 CHRONOS_SYSTEM_PROMPT = """
 You are ChronosAI, an intelligent college timetable management assistant.
@@ -165,32 +172,29 @@ def build_graph():
             response = None
             last_err = None
 
-            # Try primary model llama-3.3-70b-versatile with key rotation
-            for idx, key in enumerate(keys):
-                try:
-                    llm = ChatGroq(
-                        model="llama-3.3-70b-versatile",
-                        api_key=key,
-                        temperature=0.1,
-                        max_tokens=2048,
-                    )
-                    if has_executed_action:
-                        llm_with_tools = llm
-                    else:
-                        llm_with_tools = llm.bind_tools(TOOLS)
-                    response = llm_with_tools.invoke(messages)
-                    print(f"[ChronosAI] Chatbot primary model succeeded using key index {idx}.")
+            # Establish dynamic model priority hierarchy based on user presentation preference flag
+            if USE_QWEN_AS_PRIMARY:
+                models_to_try = [
+                    ("qwen/qwen3-32b", "Qwen Primary"),
+                    ("llama-3.3-70b-versatile", "Llama-70B Secondary Fallback"),
+                    ("llama-3.1-8b-instant", "Llama-8B Tertiary Fallback")
+                ]
+            else:
+                models_to_try = [
+                    ("llama-3.3-70b-versatile", "Llama-70B Primary"),
+                    ("qwen/qwen3-32b", "Qwen Secondary Fallback"),
+                    ("llama-3.1-8b-instant", "Llama-8B Tertiary Fallback")
+                ]
+
+            for model_name, label in models_to_try:
+                if response is not None:
                     break
-                except Exception as primary_err:
-                    print(f"[ChronosAI] Chatbot primary model rate limited or failed on key index {idx}: {primary_err}")
-                    last_err = primary_err
-
-            if response is None:
-                print("[ChronosAI] Chatbot primary model failed on all keys. Attempting qwen/qwen3-32b fallback...")
+                    
+                print(f"[ChronosAI] Attempting execution with model: {model_name} ({label})...")
                 for idx, key in enumerate(keys):
                     try:
                         llm = ChatGroq(
-                            model="qwen/qwen3-32b",
+                            model=model_name,
                             api_key=key,
                             temperature=0.1,
                             max_tokens=2048,
@@ -199,33 +203,13 @@ def build_graph():
                             llm_with_tools = llm
                         else:
                             llm_with_tools = llm.bind_tools(TOOLS)
+                            
                         response = llm_with_tools.invoke(messages)
-                        print(f"[ChronosAI] Chatbot Qwen fallback succeeded using key index {idx}.")
+                        print(f"[ChronosAI] Chatbot execution succeeded using model {model_name} with key index {idx}.")
                         break
-                    except Exception as fallback_err:
-                        print(f"[ChronosAI] Chatbot Qwen fallback failed on key index {idx}: {fallback_err}")
-                        last_err = fallback_err
-
-            if response is None:
-                print("[ChronosAI] Chatbot Qwen fallback failed on all keys. Attempting llama-3.1-8b-instant fallback...")
-                for idx, key in enumerate(keys):
-                    try:
-                        llm = ChatGroq(
-                            model="llama-3.1-8b-instant",
-                            api_key=key,
-                            temperature=0.1,
-                            max_tokens=2048,
-                        )
-                        if has_executed_action:
-                            llm_with_tools = llm
-                        else:
-                            llm_with_tools = llm.bind_tools(TOOLS)
-                        response = llm_with_tools.invoke(messages)
-                        print(f"[ChronosAI] Chatbot Llama-8B fallback succeeded using key index {idx}.")
-                        break
-                    except Exception as fallback_err:
-                        print(f"[ChronosAI] Chatbot Llama-8B fallback failed on key index {idx}: {fallback_err}")
-                        last_err = fallback_err
+                    except Exception as err:
+                        print(f"[ChronosAI] Chatbot failed using model {model_name} on key index {idx}: {err}")
+                        last_err = err
 
             if response is None:
                 print("[ChronosAI] Chatbot all models failed on all keys. Returning friendly rate limit status message.")
