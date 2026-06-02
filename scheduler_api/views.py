@@ -1118,6 +1118,9 @@ class AuthLogoutView(View):
 class AuthRegisterView(View):
     def post(self, request):
         try:
+            from django.contrib.auth.models import User
+            from scheduler_api.models import UserProfile, Employee
+
             body = json.loads(request.body)
             username = body.get('username', '').strip()
             password = body.get('password', '').strip()
@@ -1138,9 +1141,6 @@ class AuthRegisterView(View):
                     return JsonResponse({
                         'error': f"Department '{department}' already has an HOD account registered ('{existing_hod.user.username}'). Only one HOD is allowed per department."
                     }, status=400)
-
-            from django.contrib.auth.models import User
-            from scheduler_api.models import UserProfile, Employee
 
             if User.objects.filter(username__iexact=username).exists():
                 return JsonResponse({'error': f"Username '{username}' already exists. Please choose a different username."}, status=400)
