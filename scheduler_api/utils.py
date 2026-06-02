@@ -166,6 +166,20 @@ Example Output:
 def get_groq_api_keys() -> list:
     import os
     from django.conf import settings
+    from pathlib import Path
+    
+    # Proactively load .env dynamically if keys are missing from os.environ
+    if not os.environ.get('GROQ_API_KEY'):
+        base_dir = Path(__file__).resolve().parent.parent
+        env_file = base_dir / '.env'
+        if env_file.exists():
+            with open(env_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        key, val = line.split('=', 1)
+                        os.environ[key.strip()] = val.strip()
+
     keys = []
     
     # 1. Primary key
