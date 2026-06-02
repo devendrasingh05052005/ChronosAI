@@ -997,6 +997,38 @@
     <script>
         const CHAT_HISTORY_KEY = 'chatHistory_' + '{{ request.user.username|default:"anonymous" }}';
 
+        function formatMarkdown(text) {
+            // Convert markdown bold **text** to HTML strong tags
+            let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-orange-600 font-bold">$1</strong>');
+            // Convert simple bullet points (starting with * or -) to styled custom bullets
+            formatted = formatted.replace(/^\s*[\*\-]\s+(.*)$/gm, '<div class="flex items-start gap-1.5 my-1.5"><span class="text-orange-500 font-black text-xs pt-0.5">•</span><span class="text-slate-700 font-medium">$1</span></div>');
+            return formatted;
+        }
+
+        function streamTextToBubble(elementId, htmlContent, onCompleteCallback) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            
+            // Split HTML content by spaces and full HTML tags to preserve them during streaming
+            const words = htmlContent.split(/(\s+|<[^>]+>)/g);
+            let currentIdx = 0;
+            el.innerHTML = '';
+            
+            function renderNextWord() {
+                if (currentIdx < words.length) {
+                    el.innerHTML += words[currentIdx];
+                    currentIdx++;
+                    scrollChatToBottom(true);
+                    
+                    const isTag = words[currentIdx - 1] && words[currentIdx - 1].startsWith('<');
+                    setTimeout(renderNextWord, isTag ? 0 : 35);
+                } else {
+                    if (onCompleteCallback) onCompleteCallback();
+                }
+            }
+            renderNextWord();
+        }
+
         /* ── Utilities ── */
         function escapeHtml(text) {
             const d = document.createElement('div');
@@ -1214,52 +1246,59 @@
             .then(data => {
                 hideTypingIndicator();
                 let rawResponse = data.response || data.reply || data.error || 'Execution processed.';
-                // Filter out internal <think>...</think> tags and everything inside them
+                // Filter out internal <think>.../think> tags
                 rawResponse = rawResponse.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-                const aiResponse = escapeHtml(rawResponse);
+                const cleanResponse = escapeHtml(rawResponse);
+                const aiResponseHTML = formatMarkdown(cleanResponse);
+                
+                const uniqueBubbleId = 'ai-bubble-' + Date.now();
                 streamCanvas.insertAdjacentHTML('beforeend', `
                     <div class="flex gap-3 max-w-3xl animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white flex items-center justify-center shrink-0 shadow-glow-orange animate-pulse">
                             <i class="fa-solid fa-robot text-xs text-white"></i>
                         </div>
-                        <div class="chat-bubble-ai p-4 text-sm leading-relaxed text-slate-700 whitespace-pre-line max-w-[90%]">${aiResponse}</div>
+                        <div id="${uniqueBubbleId}" class="chat-bubble-ai p-4 text-sm leading-relaxed text-slate-700 max-w-[90%] whitespace-pre-line"></div>
                     </div>`);
                 
-                sessionStorage.setItem(CHAT_HISTORY_KEY, streamCanvas.innerHTML);
                 scrollChatToBottom(true);
-
-                // Detect proxy or swap completion to trigger live dashboard refresh
-                const lowerResponse = aiResponse.toLowerCase();
-                const isProxySuccess = 
-                    lowerResponse.includes('proxy assigned') || 
-                    lowerResponse.includes('assigned as proxy') ||
-                    lowerResponse.includes('assigned successfully') ||
-                    (lowerResponse.includes('proxy') && (lowerResponse.includes('success') || lowerResponse.includes('completed') || lowerResponse.includes('done')));
                 
-                const isSwapSuccess = 
-                    lowerResponse.includes('swapped') || 
-                    lowerResponse.includes('swap completed') || 
-                    lowerResponse.includes('swap transaction completed') ||
-                    (lowerResponse.includes('swap') && (lowerResponse.includes('success') || lowerResponse.includes('completed') || lowerResponse.includes('done')));
-                
-                if (isProxySuccess || isSwapSuccess) {
-                    sessionStorage.setItem('activeTab', 'chat');
-                    
-                    // Show a subtle toast overlay in the chat to warn the user of auto-sync
-                    streamCanvas.insertAdjacentHTML('beforeend', `
-                        <div class="flex gap-3 max-w-3xl mt-2 animate-bounce">
-                            <div class="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xs shrink-0 shadow-md"><i class="fa-solid fa-arrows-rotate animate-spin"></i></div>
-                            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl text-sm font-semibold shadow-sm">
-                                🔄 Live schedule change detected! Auto-refreshing and syncing dashboard in 2 seconds...
-                            </div>
-                        </div>`);
+                streamTextToBubble(uniqueBubbleId, aiResponseHTML, () => {
+                    // Save history once completed
                     sessionStorage.setItem(CHAT_HISTORY_KEY, streamCanvas.innerHTML);
-                    scrollChatToBottom(true);
                     
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2200);
-                }
+                    // Detect proxy or swap completion to trigger live dashboard refresh
+                    const lowerResponse = cleanResponse.toLowerCase();
+                    const isProxySuccess = 
+                        lowerResponse.includes('proxy assigned') || 
+                        lowerResponse.includes('assigned as proxy') ||
+                        lowerResponse.includes('assigned successfully') ||
+                        (lowerResponse.includes('proxy') && (lowerResponse.includes('success') || lowerResponse.includes('completed') || lowerResponse.includes('done')));
+                    
+                    const isSwapSuccess = 
+                        lowerResponse.includes('swapped') || 
+                        lowerResponse.includes('swap completed') || 
+                        lowerResponse.includes('swap transaction completed') ||
+                        (lowerResponse.includes('swap') && (lowerResponse.includes('success') || lowerResponse.includes('completed') || lowerResponse.includes('done')));
+                    
+                    if (isProxySuccess || isSwapSuccess) {
+                        sessionStorage.setItem('activeTab', 'chat');
+                        
+                        // Show a subtle toast overlay in the chat to warn the user of auto-sync
+                        streamCanvas.insertAdjacentHTML('beforeend', `
+                            <div class="flex gap-3 max-w-3xl mt-2 animate-bounce">
+                                <div class="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xs shrink-0 shadow-md"><i class="fa-solid fa-arrows-rotate animate-spin"></i></div>
+                                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl text-sm font-semibold shadow-sm">
+                                    🔄 Live schedule change detected! Auto-refreshing and syncing dashboard in 2 seconds...
+                                </div>
+                            </div>`);
+                        sessionStorage.setItem(CHAT_HISTORY_KEY, streamCanvas.innerHTML);
+                        scrollChatToBottom(true);
+                        
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2200);
+                    }
+                });
             })
             .catch(err => {
                 hideTypingIndicator();
