@@ -1129,8 +1129,15 @@ class AuthRegisterView(View):
             if not username or not password:
                 return JsonResponse({'error': 'Username and password are required.'}, status=400)
 
-            if role == 'HOD' and not department:
-                return JsonResponse({'error': 'HOD accounts must select a department.'}, status=400)
+            if role == 'HOD':
+                if not department:
+                    return JsonResponse({'error': 'HOD accounts must select a department.'}, status=400)
+                # Ensure only one HOD exists per department
+                if UserProfile.objects.filter(role='HOD', department=department).exists():
+                    existing_hod = UserProfile.objects.filter(role='HOD', department=department).first()
+                    return JsonResponse({
+                        'error': f"Department '{department}' already has an HOD account registered ('{existing_hod.user.username}'). Only one HOD is allowed per department."
+                    }, status=400)
 
             from django.contrib.auth.models import User
             from scheduler_api.models import UserProfile, Employee
