@@ -38,10 +38,10 @@
     <style>
         /* 🌌 Ultra-Premium Glassmorphism & Cyberpunk-lite tokens */
         .glass-panel {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.88) 100%);
-            backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(248, 250, 252, 0.58) 100%);
+            backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.03), inset 0 1px 0 0 rgba(255, 255, 255, 0.7);
         }
         .glass-panel-dark {
             background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
@@ -50,10 +50,10 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
         }
         .neon-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.03);
+            background: rgba(255, 255, 255, 0.62);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.02);
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .neon-card:hover {
@@ -66,9 +66,40 @@
             background: linear-gradient(90deg, rgba(255, 251, 235, 0.92) 0%, rgba(255, 255, 255, 0.7) 100%);
         }
         .nav-item-active {
-            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.45);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.9) 0%, rgba(234, 88, 12, 0.95) 100%);
+            box-shadow: 0 8px 24px -4px rgba(249, 115, 22, 0.5), 0 0 15px rgba(249, 115, 22, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        .nav-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 3px;
+            height: 0;
+            background: linear-gradient(to bottom, #f97316, #ea580c);
+            border-radius: 999px;
+            transform: translateY(-50%);
+            transition: height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 10px #f97316;
+        }
+        .nav-btn:hover::before, .nav-btn.nav-item-active::before {
+            height: 50%;
+        }
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: #ffffff !important;
+            transform: translateX(4px);
+        }
+        .nav-btn.nav-item-active:hover {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.9) 0%, rgba(234, 88, 12, 0.95) 100%) !important;
+            transform: scale(1.02);
         }
         .progress-neon {
             background: linear-gradient(90deg, #ea580c, #f59e0b, #fbbf24);
@@ -133,7 +164,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen antialiased relative" data-current-time="{{ current_time|default:'00:00' }}" data-total-lectures="{{ total_lectures_today|default:0 }}">
+<body class="bg-gradient-to-br from-slate-50 via-orange-50/20 to-slate-100 text-slate-800 font-sans min-h-screen antialiased relative" data-current-time="{{ current_time|default:'00:00' }}" data-total-lectures="{{ total_lectures_today|default:0 }}">
 
     <!-- 🌌 Dynamic Background Organic Glow Blobs -->
     <div class="fixed top-0 left-0 w-full h-full pointer-events-none z-[-1] overflow-hidden opacity-60">
@@ -143,83 +174,94 @@
 
     {% if is_unauthenticated %}
     <!-- ═══ GLASSMORPHIC LOGIN & REGISTRATION PORTAL ═══ -->
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-cover bg-center bg-no-repeat relative" style="background-image: url('/media/campus_bg.jpg');">
+    <div class="fixed inset-0 z-50 flex flex-col items-center justify-between p-4 overflow-y-auto bg-cover bg-center bg-no-repeat" style="background-image: url('/media/campus_bg.jpg');">
         <!-- Deep space backdrop blur overlay for maximum card readability -->
-        <div class="absolute inset-0 bg-slate-950/75 backdrop-blur-[6px] z-0"></div>
+        <div class="absolute inset-0 bg-slate-950/45 backdrop-blur-[2px] z-0"></div>
         
-        <div class="glass-panel-dark w-full max-w-md rounded-3xl border border-white/10 p-8 shadow-2xl relative overflow-hidden text-white my-auto z-10">
+        <!-- Top spacer to balance vertical centering with footer -->
+        <div class="w-full h-2 z-10"></div>
+        
+        <div class="glass-panel-dark w-full max-w-md rounded-3xl border border-white/10 p-5 shadow-2xl relative overflow-hidden text-white my-auto z-10">
             <div class="absolute -top-12 -right-12 w-32 h-32 bg-gradient-to-tr from-orange-600 to-amber-500 rounded-full blur-2xl opacity-40"></div>
             
-            <div class="flex flex-col items-center text-center mb-6">
-                <div class="w-20 h-20 bg-white p-1.5 rounded-2xl shadow-glow-orange mb-3 flex items-center justify-center overflow-hidden border border-white/20">
+            <div class="flex flex-col items-center text-center mb-4">
+                <div class="w-14 h-14 bg-white p-1 rounded-2xl shadow-glow-orange mb-2 flex items-center justify-center overflow-hidden border border-white/20">
                     <img src="/media/images.jpeg" alt="SISTec Logo" class="max-w-full max-h-full object-contain">
                 </div>
-                <h2 class="text-2xl font-black bg-gradient-to-r from-orange-400 via-amber-300 to-orange-200 bg-clip-text text-transparent">ChronosAI ERP Portal</h2>
-                <p class="text-xs text-slate-400 mt-1">SISTec CSE-AIDS Timetable command suite</p>
+                <h2 class="text-xl font-black bg-gradient-to-r from-orange-400 via-amber-300 to-orange-200 bg-clip-text text-transparent">ChronosAI ERP Portal</h2>
+                <p class="text-[10px] text-slate-400 mt-0.5">SISTec CSE-AIDS Timetable command suite</p>
             </div>
 
             <!-- Sleek Switcher Tabs -->
-            <div class="flex bg-slate-900/60 p-1 rounded-2xl border border-slate-800/80 mb-6">
-                <button onclick="switchAuthTab('login')" id="tab-login-btn" class="flex-1 text-center py-2.5 rounded-xl text-xs font-bold transition-all duration-300 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg">
+            <div class="flex bg-slate-900/60 p-1 rounded-2xl border border-slate-800/80 mb-4">
+                <button onclick="switchAuthTab('login')" id="tab-login-btn" class="flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all duration-300 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg">
                     Sign In
                 </button>
-                <button onclick="switchAuthTab('register')" id="tab-register-btn" class="flex-1 text-center py-2.5 rounded-xl text-xs font-bold transition-all duration-300 text-slate-400 hover:text-slate-200">
+                <button onclick="switchAuthTab('register')" id="tab-register-btn" class="flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all duration-300 text-slate-400 hover:text-slate-200">
                     Sign Up
                 </button>
             </div>
 
             <!-- Login Panel -->
-            <div id="auth-login-panel" class="space-y-4">
+            <div id="auth-login-panel" class="space-y-3.5">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Username</label>
-                    <input type="text" id="login-username" placeholder="Enter username (e.g. hod, prof_meha)" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300">
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Username</label>
+                    <input type="text" id="login-username" placeholder="Enter username (e.g. hod, prof_meha)" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-xs font-semibold transition-all duration-300">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Password</label>
-                    <input type="password" id="login-password" placeholder="Enter password" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300" onkeydown="if(event.key==='Enter') performLogin()">
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-xs font-semibold transition-all duration-300" onkeydown="if(event.key==='Enter') performLogin()">
                 </div>
                 
-                <button onclick="performLogin()" id="login-btn" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs py-4 rounded-xl transition-all duration-300 tracking-[0.2em] uppercase shadow-lg hover:shadow-glow-orange hover:scale-[1.01] mt-6">
+                <button onclick="performLogin()" id="login-btn" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs py-3 rounded-xl transition-all duration-300 tracking-[0.2em] uppercase shadow-lg hover:shadow-glow-orange hover:scale-[1.01] mt-4">
                     Enter Portal
                 </button>
             </div>
 
             <!-- Register Panel (Hidden by default) -->
-            <div id="auth-register-panel" class="hidden space-y-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Username</label>
-                    <input type="text" id="register-username" placeholder="Choose username (e.g. hod_new, meha)" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300">
+            <div id="auth-register-panel" class="hidden space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Username</label>
+                        <input type="text" id="register-username" placeholder="Choose username" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-xs font-semibold transition-all duration-300">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Password</label>
+                        <input type="password" id="register-password" placeholder="Create password" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-xs font-semibold transition-all duration-300">
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Email Address</label>
-                    <input type="email" id="register-email" placeholder="name@sistec.ac.in" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300">
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Email Address</label>
+                        <input type="email" id="register-email" placeholder="name@sistec.ac.in" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-xs font-semibold transition-all duration-300">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Role Type</label>
+                        <select id="register-role" onchange="toggleRegisterRole()" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-xs font-semibold transition-all duration-300">
+                            <option value="Faculty" selected class="bg-slate-950 text-slate-200">👨‍🏫 Faculty</option>
+                            <option value="HOD" class="bg-slate-950 text-slate-200">👑 HOD</option>
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Password</label>
-                    <input type="password" id="register-password" placeholder="Create strong password" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Role Type</label>
-                    <select id="register-role" onchange="toggleRegisterRole()" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300">
-                        <option value="Faculty" selected class="bg-slate-950 text-slate-200">👨‍🏫 Faculty Member</option>
-                        <option value="HOD" class="bg-slate-950 text-slate-200">👑 HOD Department Head</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Select Department</label>
-                    <select id="register-department" onchange="filterEmployeesByDepartment()" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300">
-                        <option value="" disabled selected class="bg-slate-950 text-slate-400">-- Choose Department --</option>
-                        <option value="CSE-AIDS" class="bg-slate-950 text-slate-200">CSE-AIDS (AI & Data Science)</option>
-                        <option value="CSE" class="bg-slate-950 text-slate-200">CSE (Computer Science)</option>
-                        <option value="ECE" class="bg-slate-950 text-slate-200">ECE (Electronics & Comm)</option>
-                        <option value="ME" class="bg-slate-950 text-slate-200">ME (Mechanical Eng)</option>
-                    </select>
-                </div>
-                <div id="register-employee-wrapper" class="transition-all duration-300 max-h-40 overflow-hidden">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Select Your Faculty Profile</label>
-                    <select id="register-employee" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-sm font-semibold transition-all duration-300">
-                        <option value="" disabled selected class="bg-slate-950 text-slate-400">-- Choose your name --</option>
-                    </select>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Select Department</label>
+                        <select id="register-department" onchange="filterEmployeesByDepartment()" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-xs font-semibold transition-all duration-300">
+                            <option value="" disabled selected class="bg-slate-950 text-slate-400">-- Choose --</option>
+                            <option value="CSE-AIDS" class="bg-slate-950 text-slate-200">CSE-AIDS</option>
+                            <option value="CSE" class="bg-slate-950 text-slate-200">CSE</option>
+                            <option value="ECE" class="bg-slate-950 text-slate-200">ECE</option>
+                            <option value="ME" class="bg-slate-950 text-slate-200">ME</option>
+                        </select>
+                    </div>
+                    <div id="register-employee-wrapper" class="transition-all duration-300 max-h-40 overflow-hidden">
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Select Profile</label>
+                        <select id="register-employee" class="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 text-xs font-semibold transition-all duration-300">
+                            <option value="" disabled selected class="bg-slate-950 text-slate-400">-- Choose --</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Client-side Employee Data Mapper -->
@@ -231,13 +273,13 @@
                     ]
                 </script>
                 
-                <button onclick="performRegister()" id="register-btn" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs py-4 rounded-xl transition-all duration-300 tracking-[0.2em] uppercase shadow-lg hover:shadow-glow-orange hover:scale-[1.01] mt-6">
+                <button onclick="performRegister()" id="register-btn" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs py-3 rounded-xl transition-all duration-300 tracking-[0.2em] uppercase shadow-lg hover:shadow-glow-orange hover:scale-[1.01] mt-4">
                     Create Account
                 </button>
             </div>
 
             <!-- Quick Access / Info Panel -->
-            <div class="mt-6 pt-5 border-t border-slate-800/80 rounded-2xl bg-slate-950/40 p-4">
+            <div class="mt-4 pt-4 border-t border-slate-800/80 rounded-2xl bg-slate-950/40 p-3">
                 <p class="text-[10px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> Account Setup Notes:</p>
                 <div class="mt-2 text-[10px] text-slate-400 space-y-1 font-semibold leading-relaxed">
                     <p>👑 **HODs** manage all years, proxy shifts, fatigue mapping, and approvals.</p>
@@ -246,6 +288,11 @@
                 </div>
             </div>
         </div>
+
+        <!-- Elegant Copyright Footer -->
+        <footer class="w-full text-center py-4 z-10 text-[11px] text-slate-300 font-semibold tracking-wide drop-shadow-sm">
+            © 2026 Sagar Institute of Science & Technology (SISTec). All Rights Reserved. | Powered by ChronosAI
+        </footer>
     </div>
     {% else %}
 
@@ -282,26 +329,26 @@
             <!-- Nav -->
             <nav class="flex-1 p-4 space-y-1.5 overflow-y-auto">
                 {% if role == 'HOD' %}
-                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all duration-300 ease-in-out hover:scale-[1.02] nav-item-active">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 nav-item-active">
                     <i class="fa-solid fa-chart-pie w-5 text-center"></i> Command Center
                 </button>
                 {% else %}
-                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all duration-300 ease-in-out hover:scale-[1.02] nav-item-active">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 nav-item-active">
                     <i class="fa-solid fa-chalkboard-user w-5 text-center"></i> My Workspace
                 </button>
                 {% endif %}
-                <button onclick="switchTab('chat')" id="btn-chat" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all duration-300 ease-in-out hover:scale-[1.02]">
+                <button onclick="switchTab('chat')" id="btn-chat" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400">
                     <i class="fa-solid fa-robot w-5 text-center"></i> AI Assistant
                 </button>
-                <button onclick="switchTab('directory')" id="btn-directory" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all duration-300 ease-in-out hover:scale-[1.02]">
+                <button onclick="switchTab('directory')" id="btn-directory" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400">
                     <i class="fa-solid fa-users-gear w-5 text-center"></i> Faculty Matrix
                 </button>
                 {% if role == 'HOD' %}
-                <button onclick="switchTab('upload')" id="btn-upload" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all duration-300 ease-in-out hover:scale-[1.02]">
+                <button onclick="switchTab('upload')" id="btn-upload" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400">
                     <i class="fa-solid fa-cloud-arrow-up w-5 text-center"></i> Upload Hub
                 </button>
                 {% endif %}
-                <button onclick="switchTab('kiosk')" id="btn-kiosk" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all duration-300 ease-in-out hover:scale-[1.02]">
+                <button onclick="switchTab('kiosk')" id="btn-kiosk" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400">
                     <i class="fa-solid fa-desktop w-5 text-center"></i> Kiosk Portal
                 </button>
                 
@@ -327,8 +374,8 @@
         <div class="flex-1 flex flex-col min-w-0">
 
             <!-- Sticky top bar -->
-            <header class="sticky top-0 z-30 glass-panel border-b border-slate-200/80 px-4 lg:px-8 py-4 flex items-center justify-between gap-4 shadow-sm">
-                <div class="flex items-center gap-3 min-w-0">
+            <header class="sticky top-0 z-30 glass-panel border-b border-slate-200/80 px-4 lg:px-8 py-1 lg:py-1.5 flex items-center justify-between gap-4 shadow-sm">
+                <div class="flex items-center gap-3 min-w-0 shrink-0">
                     <button onclick="toggleMobileSidebar(true)" class="lg:hidden p-2.5 rounded-xl bg-slate-900 text-white hover:bg-orange-600 transition-all duration-300 hover:shadow-glow-orange">
                         <i class="fa-solid fa-bars"></i>
                     </button>
@@ -337,6 +384,12 @@
                         <p class="text-xs text-slate-500 truncate">{{ current_day|default:"Today" }} · SISTec Bhopal</p>
                     </div>
                 </div>
+                
+                <!-- Premium Center Banner Logos (Expanded to fill horizontal blank space) -->
+                <div class="hidden md:flex items-center justify-center flex-1 max-w-4xl h-20 lg:h-24 overflow-hidden px-4">
+                    <img src="/media/header.png" alt="SISTec Alliances" class="h-full w-full object-contain mix-blend-multiply opacity-90 hover:opacity-100 transition-opacity duration-300">
+                </div>
+                
                 <div class="flex items-center gap-3 shrink-0">
                     <div class="hidden sm:flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl font-mono text-lg font-bold tracking-widest shadow-lg transition-all duration-300 hover:shadow-glow-orange hover:scale-102">
                         <i class="fa-regular fa-clock text-orange-400 text-sm"></i>
@@ -377,7 +430,7 @@
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             {% for swap in pending_swaps %}
-                            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-3 flex flex-col justify-between hover:border-orange-200 transition-all duration-300">
+                            <div class="bg-white/60 backdrop-blur-md border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-3 flex flex-col justify-between hover:border-orange-200 transition-all duration-300">
                                 <div>
                                     <div class="flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase">
                                         <span>Submitted {{ swap.created_at|date:"d M Y @ H:i" }}</span>
@@ -435,6 +488,20 @@
                                 <div class="h-3 w-full bg-slate-200 rounded-full overflow-hidden">
                                     <div id="lecture-progress-bar" class="h-full progress-neon rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
                                 </div>
+                                
+                                <!-- Active/Current Live Lecture display -->
+                                <div id="live-lecture-container" class="mt-4 pt-3 border-t border-slate-100 hidden">
+                                    <p class="text-[10px] text-orange-500 font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                                        <span class="relative flex h-2 w-2">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                                        </span>
+                                        Ongoing Lecture:
+                                    </p>
+                                    <div id="live-lecture-details" class="space-y-1.5">
+                                        <!-- Dynamic text populated by JS -->
+                                    </div>
+                                </div>
                             </div>
                             <p class="text-[10px] text-slate-400 mt-4 uppercase tracking-wider">Live tracking · {{ current_time|default:"--:--" }} IST</p>
                         </div>
@@ -445,7 +512,7 @@
                         <h3 class="text-base font-extrabold text-slate-900 tracking-tight"><i class="fa-solid fa-chart-line text-orange-500 mr-2"></i>Faculty Workloads & Fatigue Analytics</h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             {% for load in faculty_load %}
-                            <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-2 transition-all hover:scale-[1.01] hover:border-orange-100">
+                            <div class="bg-white/60 backdrop-blur-md border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-2 transition-all hover:scale-[1.01] hover:border-orange-100">
                                 <div class="flex justify-between items-center">
                                     <span class="font-bold text-slate-800 text-sm truncate" title="{{ load.name }}">{{ load.name }}</span>
                                     <span class="text-xs font-black {% if load.fatigue_pct > 70 %}text-rose-600{% elif load.fatigue_pct > 40 %}text-amber-600{% else %}text-emerald-600{% endif %}">{{ load.fatigue_pct }}%</span>
@@ -492,7 +559,7 @@
                                         <th class="p-4 lg:p-5">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-sm bg-white">
+                                <tbody class="text-sm bg-transparent">
                                     {% if lectures %}
                                         {% for lecture in lectures %}
                                         <tr class="border-b border-slate-100 transition-all duration-300 ease-in-out hover:bg-slate-50/80 hover:scale-[1.005] origin-left year-row {% if lecture.is_proxy %}proxy-row-glow{% endif %}"
@@ -567,7 +634,7 @@
                     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                         <!-- Left Workspace Panel (Timeline Schedules & Logs) -->
                         <div class="xl:col-span-2 space-y-6">
-                            <div class="glass-panel rounded-2xl border border-white/80 shadow-card overflow-hidden bg-white">
+                            <div class="glass-panel rounded-2xl border border-white/80 shadow-card overflow-hidden">
                                 <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center gap-3">
                                     <h2 class="text-lg font-bold text-slate-900 tracking-tight"><i class="fa-solid fa-clock text-orange-500 mr-2"></i>My Personalized Schedules & Timelines</h2>
                                     <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-3.5 py-1.5 rounded-full border border-emerald-200 uppercase tracking-widest flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active Duty</span>
@@ -577,7 +644,7 @@
                                     {% if my_lectures %}
                                         <div class="space-y-4">
                                             {% for lecture in my_lectures %}
-                                            <div class="border border-slate-200/80 rounded-2xl p-5 bg-white flex items-center justify-between gap-4 transition-all duration-300 hover:border-orange-200 shadow-sm relative origin-left">
+                                            <div class="border border-slate-200/80 rounded-2xl p-5 bg-white/60 backdrop-blur-md flex items-center justify-between gap-4 transition-all duration-300 hover:border-orange-200 shadow-sm relative origin-left">
                                                 <div class="min-w-0 flex-1">
                                                     <div class="flex items-center gap-2 flex-wrap">
                                                         <span class="bg-slate-950 text-white font-mono text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase">{{ lecture.day_of_week }}</span>
@@ -617,7 +684,7 @@
                                 <h3 class="text-base font-extrabold text-slate-900 tracking-tight"><i class="fa-solid fa-book text-orange-500 mr-2"></i>My Recent Syllabus Logs</h3>
                                 <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
                                     {% for log in my_syllabus_logs %}
-                                    <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm text-xs flex justify-between gap-4 hover:border-orange-100 transition-all">
+                                    <div class="bg-white/60 backdrop-blur-md border border-slate-200/80 rounded-2xl p-4 shadow-sm text-xs flex justify-between gap-4 hover:border-orange-100 transition-all">
                                         <div>
                                             <p class="font-extrabold text-slate-800">{{ log.schedule.task_name }} — <span class="text-slate-400 font-bold uppercase">{{ log.schedule.academic_year }} (Sec {{ log.schedule.section }})</span></p>
                                             <p class="text-slate-500 font-semibold mt-1.5">Topic Covered: <strong class="text-slate-800 font-bold">{{ log.topic_covered }}</strong></p>
@@ -757,13 +824,13 @@
                             </div>
                             <div class="relative w-full lg:w-80">
                                 <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="faculty-search" placeholder="Search faculty… e.g. Meha, Dheeraj" oninput="filterFacultyGrid(this.value)" class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 transition-all duration-300">
+                                <input type="text" id="faculty-search" placeholder="Search faculty… e.g. Meha, Dheeraj" oninput="filterFacultyGrid(this.value)" class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white/70 backdrop-blur-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 transition-all duration-300">
                             </div>
                         </div>
 
                         <div id="faculty-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                             {% for faculty in faculty_directory %}
-                            <div class="faculty-card border border-slate-200/80 rounded-2xl p-5 bg-white flex items-center justify-between gap-3 transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-card hover:border-orange-200"
+                            <div class="faculty-card border border-slate-200/80 rounded-2xl p-5 bg-white/60 backdrop-blur-md flex items-center justify-between gap-3 transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-card hover:border-orange-200"
                                  data-faculty-name="{{ faculty.name|lower }}">
                                 <div class="min-w-0">
                                     <h4 class="font-bold text-slate-900 truncate">{{ faculty.name }}</h4>
@@ -859,7 +926,7 @@
                                         <th class="p-4 text-center">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="preview-table-body" class="text-sm bg-white divide-y divide-slate-100">
+                                <tbody id="preview-table-body" class="text-sm bg-transparent divide-y divide-slate-100">
                                     <!-- Dynamic rows will be inserted here -->
                                 </tbody>
                             </table>
@@ -1091,6 +1158,48 @@
             if (pctEl) pctEl.textContent = `${pct}%`;
             if (compEl) compEl.textContent = completed;
             if (remEl) remEl.textContent = remaining;
+
+            // Find current ongoing lectures
+            const liveLectureContainer = document.getElementById('live-lecture-container');
+            const liveLectureDetails = document.getElementById('live-lecture-details');
+            if (liveLectureContainer && liveLectureDetails) {
+                let liveLectures = [];
+                rows.forEach(row => {
+                    const start = row.dataset.lectureStart;
+                    const end = row.dataset.lectureEnd;
+                    if (start && end && compareTimeHHMM(start, currentHHMM) <= 0 && compareTimeHHMM(end, currentHHMM) > 0) {
+                        const cells = row.querySelectorAll('td');
+                        if (cells.length >= 5) {
+                            const subject = cells[3].textContent.trim();
+                            
+                            // Extract teacher name, clean it up
+                            let faculty = cells[4].textContent.trim();
+                            faculty = faculty.replace(/\s+/g, ' '); // normalize spaces
+                            
+                            // Year & Section
+                            const yearSecText = cells[1].textContent.trim().replace(/\s+/g, ' ');
+                            
+                            // Room
+                            const roomText = cells[2].textContent.trim();
+                            
+                            liveLectures.push({ subject, faculty, yearSecText, roomText });
+                        }
+                    }
+                });
+
+                if (liveLectures.length > 0) {
+                    liveLectureContainer.classList.remove('hidden');
+                    liveLectureDetails.innerHTML = liveLectures.map(l => `
+                        <div class="flex flex-col gap-0.5 border-l-2 border-orange-500/50 pl-2 py-0.5 mb-1.5 last:mb-0">
+                            <span class="text-slate-800 font-bold text-[11px]">${l.subject}</span>
+                            <span class="text-slate-500 text-[10px] font-semibold">${l.faculty} · <span class="text-slate-400 font-medium">${l.yearSecText} (${l.roomText})</span></span>
+                        </div>
+                    `).join('');
+                } else {
+                    liveLectureContainer.classList.add('hidden');
+                    liveLectureDetails.innerHTML = '';
+                }
+            }
         }
 
         /* ── Sidebar / tabs ── */
@@ -1495,7 +1604,7 @@
 
             window.extractedScheduleRows.forEach((row, index) => {
                 const tr = document.createElement('tr');
-                tr.className = 'border-b border-slate-100 bg-white hover:bg-slate-50/50 transition-all duration-200';
+                tr.className = 'border-b border-slate-100 bg-white/40 hover:bg-slate-50/50 transition-all duration-200';
                 
                 // Day Select
                 let daySelectHtml = `<select onchange="updateRowField(${index}, 'day', this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 w-full min-w-[130px]">`;
@@ -2041,13 +2150,13 @@
             const registerPanel = document.getElementById('auth-register-panel');
 
             if (tab === 'login') {
-                loginBtn.className = "flex-1 text-center py-2.5 rounded-xl text-xs font-bold transition-all duration-300 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg";
-                registerBtn.className = "flex-1 text-center py-2.5 rounded-xl text-xs font-bold transition-all duration-300 text-slate-400 hover:text-slate-200";
+                loginBtn.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all duration-300 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg";
+                registerBtn.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all duration-300 text-slate-400 hover:text-slate-200";
                 loginPanel.classList.remove('hidden');
                 registerPanel.classList.add('hidden');
             } else {
-                registerBtn.className = "flex-1 text-center py-2.5 rounded-xl text-xs font-bold transition-all duration-300 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg";
-                loginBtn.className = "flex-1 text-center py-2.5 rounded-xl text-xs font-bold transition-all duration-300 text-slate-400 hover:text-slate-200";
+                registerBtn.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all duration-300 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg";
+                loginBtn.className = "flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all duration-300 text-slate-400 hover:text-slate-200";
                 loginPanel.classList.add('hidden');
                 registerPanel.classList.remove('hidden');
             }
