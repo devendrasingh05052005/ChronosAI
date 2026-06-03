@@ -13,6 +13,7 @@ from scheduler_api.views import (
     SyllabusLogCreateView,
     ProfileAlertUpdateView,
     UpdateRoomView,
+    ResetDemoDatabaseView,
 )
 
 urlpatterns = [
@@ -29,4 +30,5 @@ urlpatterns = [
     path('api/syllabus-log/create/', SyllabusLogCreateView.as_view(), name='syllabus_log_create'),
     path('api/profile/update-alerts/', ProfileAlertUpdateView.as_view(), name='profile_alert_update'),
     path('api/schedule/update-room/', UpdateRoomView.as_view(), name='update_room'),
+    path('api/reset-demo-db/', ResetDemoDatabaseView.as_view(), name='reset_demo_db'),
 ]

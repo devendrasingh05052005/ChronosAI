@@ -1390,3 +1390,104 @@ class UpdateRoomView(View):
             })
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ResetDemoDatabaseView(View):
+    def post(self, request):
+        if not request.user.is_authenticated or request.user.profile.role != 'HOD':
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+        try:
+            from django.db import transaction
+            from scheduler_api.models import Schedule, Employee, TimetableFile, SyllabusLog, SwapRequest
+            from scheduler_api.utils import (
+                _get_local_4th_sem_a_schedule,
+                _get_local_4th_sem_b_schedule,
+                _get_local_6th_sem_a_schedule,
+                _get_local_6th_sem_b_schedule,
+                _get_local_8th_sem_schedule
+            )
+            
+            with transaction.atomic():
+                # Clear dynamic datasets
+                SyllabusLog.objects.all().delete()
+                SwapRequest.objects.all().delete()
+                Schedule.objects.all().delete()
+                TimetableFile.objects.all().delete()
+                
+                # Load fresh timetables
+                schedules_to_load = []
+                schedules_to_load.extend(_get_local_4th_sem_a_schedule()["schedule"])
+                schedules_to_load.extend(_get_local_4th_sem_b_schedule()["schedule"])
+                schedules_to_load.extend(_get_local_6th_sem_a_schedule()["schedule"])
+                schedules_to_load.extend(_get_local_6th_sem_b_schedule()["schedule"])
+                schedules_to_load.extend(_get_local_8th_sem_schedule()["schedule"])
+                
+                employee_cache = {}
+                for emp in Employee.objects.all():
+                    employee_cache[emp.name.strip()] = emp
+                    
+                schedule_objects = []
+                for row in schedules_to_load:
+                    day = row["day"]
+                    start_time = row["start_time"]
+                    end_time = row["end_time"]
+                    subject = row["subject"]
+                    faculty = row["faculty"]
+                    academic_year = row["academic_year"]
+                    semester = row["semester"]
+                    section = row["section"]
+                    room_number = row["room_number"]
+                    dept = "CSE-AIDS"
+                    
+                    # Split joint/composite faculty names
+                    import re
+                    faculty_parts = re.split(r'/|&|\band\b', faculty)
+                    faculty_names = []
+                    for p in faculty_parts:
+                        name = p.strip()
+                        name = re.sub(r'\s*\([^)]*\)', '', name).strip()
+                        if name and name.lower() not in ['new faculty', 'none', 'tg/lib']:
+                            faculty_names.append(name)
+                    
+                    if not faculty_names:
+                        faculty_names = [faculty.strip()]
+                        
+                    for name in faculty_names:
+                        if name not in employee_cache:
+                            employee, _ = Employee.objects.get_or_create(
+                                name=name,
+                                defaults={'department': dept}
+                            )
+                            employee_cache[name] = employee
+                            
+                        employee = employee_cache[name]
+                        
+                        schedule_objects.append(
+                            Schedule(
+                                employee=employee,
+                                day_of_week=day,
+                                start_time=start_time,
+                                end_time=end_time,
+                                task_name=subject,
+                                is_proxy=False,
+                                academic_year=academic_year,
+                                semester=semester,
+                                section=section,
+                                room_number=room_number,
+                                department=dept
+                            )
+                        )
+                        
+                Schedule.objects.bulk_create(schedule_objects)
+                
+                # Re-seed default users
+                _ensure_default_users()
+                
+            return JsonResponse({
+                'success': True,
+                'message': f"Database wiped and successfully seeded with {len(schedule_objects)} conflict-free timetable entries."
+            })
+        except Exception as e:
+            logger.exception("Database reset via panel failed: %s", e)
+            return JsonResponse({'error': f"Failed to reset: {str(e)}"}, status=500)
