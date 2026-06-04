@@ -308,7 +308,6 @@ def call_gemini_multimodal(file_path: str, system_instruction: str) -> dict:
         print(f"[ChronosAI Gemini Path] Error reading image file for base64: {e}")
         return None
 
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={gemini_key}"
     headers = {"Content-Type": "application/json"}
     payload = {
         "contents": [{
@@ -327,35 +326,51 @@ def call_gemini_multimodal(file_path: str, system_instruction: str) -> dict:
         }
     }
 
-    try:
-        print("[ChronosAI Gemini Path] Sending raw image directly to Google Gemini 2.0 Flash (Multimodal OCR)...")
-        response = requests.post(url, headers=headers, json=payload, timeout=45)
-        if response.status_code == 200:
-            res_data = response.json()
-            candidate_text = res_data['candidates'][0]['content']['parts'][0]['text']
+    models_to_try = [
+        # (Model Name, Endpoint URL)
+        ("Gemini 2.0 Flash (v1)", f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={gemini_key}"),
+        ("Gemini 1.5 Flash (v1)", f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={gemini_key}"),
+        ("Gemini 1.5 Flash (v1beta)", f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}")
+    ]
 
-            # Clean and parse response JSON
-            cleaned = candidate_text.strip()
-            cleaned = re.sub(r'^\s*```(?:json)?\s*', '', cleaned, flags=re.IGNORECASE)
-            cleaned = re.sub(r'\s*```\s*$', '', cleaned).strip()
-            if not cleaned.startswith('{'):
-                m = re.search(r'\{[\s\S]*\}', cleaned)
-                if m:
-                    cleaned = m.group(0)
+    last_error_msg = ""
+    for model_label, url in models_to_try:
+        try:
+            print(f"[ChronosAI Gemini Path] Attempting Google {model_label} Multimodal OCR...")
+            response = requests.post(url, headers=headers, json=payload, timeout=45)
+            if response.status_code == 200:
+                res_data = response.json()
+                candidate_text = res_data['candidates'][0]['content']['parts'][0]['text']
 
-            parsed_data = json.loads(cleaned)
-            if 'schedule' not in parsed_data:
-                parsed_data = {"schedule": parsed_data if isinstance(parsed_data, list) else []}
+                # Clean and parse response JSON
+                cleaned = candidate_text.strip()
+                cleaned = re.sub(r'^\s*```(?:json)?\s*', '', cleaned, flags=re.IGNORECASE)
+                cleaned = re.sub(r'\s*```\s*$', '', cleaned).strip()
+                if not cleaned.startswith('{'):
+                    m = re.search(r'\{[\s\S]*\}', cleaned)
+                    if m:
+                        cleaned = m.group(0)
 
-            slots_count = len(parsed_data.get('schedule', []))
-            print(f"[ChronosAI Gemini Path] Gemini parsed successfully from image with {slots_count} slots.")
-            return parsed_data
-        else:
-            print(f"[ChronosAI Gemini Path] Gemini Multimodal API failed with status code {response.status_code}: {response.text}")
-            return None
-    except Exception as e:
-        print(f"[ChronosAI Gemini Path] Error calling Gemini Multimodal API: {e}")
-        return None
+                parsed_data = json.loads(cleaned)
+                if 'schedule' not in parsed_data:
+                    parsed_data = {"schedule": parsed_data if isinstance(parsed_data, list) else []}
+
+                slots_count = len(parsed_data.get('schedule', []))
+                if slots_count >= 36:
+                    print(f"[ChronosAI Gemini Path] Google {model_label} parsed successfully from image with {slots_count} slots.")
+                    return parsed_data
+                else:
+                    print(f"[ChronosAI Gemini Path] Google {model_label} returned incomplete slots ({slots_count}), trying next model...")
+            else:
+                print(f"[ChronosAI Gemini Path] Google {model_label} API failed with status code {response.status_code}: {response.text}")
+                last_error_msg = f"{model_label} API status {response.status_code}: {response.text}"
+        except Exception as e:
+            print(f"[ChronosAI Gemini Path] Error calling Google {model_label} API: {e}")
+            last_error_msg = str(e)
+
+    print(f"[ChronosAI Gemini Path] All Google Gemini Multimodal models and endpoints exhausted. Last error: {last_error_msg}")
+    return None
+
 
 
 def process_timetable_image(file_path: str) -> dict:
