@@ -327,10 +327,11 @@ def call_gemini_multimodal(file_path: str, system_instruction: str) -> dict:
     }
 
     models_to_try = [
-        # (Model Name, Endpoint URL)
         ("Gemini 2.0 Flash (v1)", f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={gemini_key}"),
-        ("Gemini 1.5 Flash (v1)", f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={gemini_key}"),
-        ("Gemini 1.5 Flash (v1beta)", f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}")
+        ("Gemini 2.0 Flash Lite (v1)", f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-lite:generateContent?key={gemini_key}"),
+        ("Gemini 2.5 Flash (v1)", f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={gemini_key}"),
+        ("Gemini 3.5 Flash (v1)", f"https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key={gemini_key}"),
+        ("Gemini 1.5 Flash Latest (v1beta)", f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={gemini_key}"),
     ]
 
     last_error_msg = ""
