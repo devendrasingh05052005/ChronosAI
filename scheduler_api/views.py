@@ -1409,6 +1409,12 @@ class ResetDemoDatabaseView(View):
             )
             
             with transaction.atomic():
+                # Clear registered user accounts & profiles
+                from django.contrib.auth.models import User
+                from scheduler_api.models import UserProfile
+                UserProfile.objects.all().delete()
+                User.objects.all().delete()
+
                 # Clear dynamic datasets
                 SyllabusLog.objects.all().delete()
                 SwapRequest.objects.all().delete()
@@ -1484,6 +1490,7 @@ class ResetDemoDatabaseView(View):
                 # Re-seed default users
                 _ensure_default_users()
                 
+            django_logout(request)
             return JsonResponse({
                 'success': True,
                 'message': f"Database wiped and successfully seeded with {len(schedule_objects)} conflict-free timetable entries."
