@@ -329,8 +329,8 @@ def call_gemini_multimodal(file_path: str, system_instruction: str) -> dict:
     models_to_try = [
         ("Gemini 2.0 Flash (v1)", f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={gemini_key}"),
         ("Gemini 2.0 Flash Lite (v1)", f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-lite:generateContent?key={gemini_key}"),
-        ("Gemini 2.5 Flash (v1)", f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={gemini_key}"),
-        ("Gemini 3.5 Flash (v1)", f"https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key={gemini_key}"),
+        ("Gemini 1.5 Flash (v1)", f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={gemini_key}"),
+        ("Gemini 1.5 Flash 8B (v1)", f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-8b:generateContent?key={gemini_key}"),
         ("Gemini 1.5 Flash Latest (v1beta)", f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={gemini_key}"),
     ]
 
@@ -373,31 +373,110 @@ def call_gemini_multimodal(file_path: str, system_instruction: str) -> dict:
     return None
 
 
+def call_groq_vision(file_path: str, system_instruction: str) -> dict:
+    import base64
+    import json
+    import re
+    from groq import Groq
+    
+    keys = get_groq_api_keys()
+    if not keys:
+        print("[ChronosAI Groq Vision] No Groq API keys available.")
+        return None
+
+    mime_type = "image/png"
+    if file_path.lower().endswith(".jpg") or file_path.lower().endswith(".jpeg"):
+        mime_type = "image/jpeg"
+
+    try:
+        with open(file_path, "rb") as f:
+            img_data = base64.b64encode(f.read()).decode('utf-8')
+    except Exception as e:
+        print(f"[ChronosAI Groq Vision] Error reading image file: {e}")
+        return None
+
+    for idx, key in enumerate(keys):
+        try:
+            print(f"[ChronosAI Groq Vision] Attempting Groq Llama 3.2 Vision OCR using key index {idx}...")
+            client = Groq(api_key=key, timeout=25.0)
+            completion = client.chat.completions.create(
+                model="llama-3.2-11b-vision-preview",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": f"{system_instruction}\n\nParse this timetable image and respond ONLY with a valid JSON object containing the parsed rows under the key 'schedule'. Do not include markdown backticks or introductory text."},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:{mime_type};base64,{img_data}"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.1,
+                max_tokens=4096,
+            )
+            raw_response = completion.choices[0].message.content
+            cleaned = raw_response.strip()
+            cleaned = re.sub(r'^\s*```(?:json)?\s*', '', cleaned, flags=re.IGNORECASE)
+            cleaned = re.sub(r'\s*```\s*$', '', cleaned).strip()
+            if not cleaned.startswith('{'):
+                m = re.search(r'\{[\s\S]*\}', cleaned)
+                if m:
+                    cleaned = m.group(0)
+
+            parsed_data = json.loads(cleaned)
+            if 'schedule' not in parsed_data:
+                parsed_data = {"schedule": parsed_data if isinstance(parsed_data, list) else []}
+
+            slots_count = len(parsed_data.get('schedule', []))
+            if slots_count >= 36:
+                print(f"[ChronosAI Groq Vision] Successfully parsed {slots_count} slots from image using Groq Vision model.")
+                return parsed_data
+            else:
+                print(f"[ChronosAI Groq Vision] Parsed successfully but only returned {slots_count} slots.")
+        except Exception as e:
+            print(f"[ChronosAI Groq Vision] Groq Vision failed using key index {idx}: {e}")
+
+    return None
+
 
 def process_timetable_image(file_path: str) -> dict:
     import os
     from django.conf import settings
 
-    # --- NEW STRATEGY: Try Multimodal Gemini 2.0 Flash First ---
-    # This runs purely in the cloud, using 0MB local memory, avoiding OOM on Render Free tier
+    # --- PHASE 1: Try Multimodal Gemini ---
     gemini_key = getattr(settings, 'GEMINI_API_KEY', None)
     if gemini_key:
         try:
-            print("[ChronosAI] Attempting direct multimodal parsing via Google Gemini 2.0 Flash...")
+            print("[ChronosAI] Attempting direct multimodal parsing via Google Gemini API...")
             parsed_data = call_gemini_multimodal(file_path, OCR_SYSTEM_PROMPT)
             if parsed_data is not None and len(parsed_data.get('schedule', [])) >= 36:
-                print(f"[ChronosAI] Success! Successfully parsed {len(parsed_data['schedule'])} slots via Gemini Multimodal path.")
+                print(f"[ChronosAI] Success! Parsed {len(parsed_data['schedule'])} slots via Gemini Multimodal path.")
                 return parsed_data
-            else:
-                print("[ChronosAI] Gemini Multimodal returned incomplete slots, falling back to local OCR...")
         except Exception as gemini_err:
-            print(f"[ChronosAI] Gemini Multimodal failed or errored: {gemini_err}")
+            print(f"[ChronosAI] Gemini Multimodal failed: {gemini_err}")
 
-    # --- FALLBACK: Local OCR (EasyOCR) ---
-    import os
+    # --- PHASE 2: Fallback to Cloud Multimodal Groq Vision (Llama 3.2 11B Vision) ---
+    try:
+        print("[ChronosAI] Gemini rate-limited or failed. Trying direct multimodal parsing via Groq Llama 3.2 Vision...")
+        parsed_data = call_groq_vision(file_path, OCR_SYSTEM_PROMPT)
+        if parsed_data is not None and len(parsed_data.get('schedule', [])) >= 36:
+            print(f"[ChronosAI] Success! Parsed {len(parsed_data['schedule'])} slots via Groq Vision path.")
+            return parsed_data
+    except Exception as groq_vision_err:
+        print(f"[ChronosAI] Groq Vision failed: {groq_vision_err}")
+
+    # --- PHASE 3: If on Render and both cloud vision models failed, raise a clear error ---
     if os.environ.get('RENDER') or os.environ.get('PORT') or os.environ.get('RENDER_SERVICE_ID'):
-        print("[ChronosAI Render Fallback] Cloud Gemini OCR failed or rate-limited. Falling back to local template parsing based on file name.")
-        return _build_smart_local_schedule(os.path.basename(file_path))
+        raise Exception(
+            "Timetable parsing failed: Both Google Gemini API and Groq Llama 3.2 Vision API endpoints are "
+            "currently rate-limited or returning quota exhausted errors (429) on Render. "
+            "Please check your API key quotas or wait a few minutes before retrying."
+        )
 
     raw_text = ""
     try:
