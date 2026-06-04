@@ -470,10 +470,17 @@
                     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                         <div class="xl:col-span-2 glass-panel-dark rounded-2xl border border-white/10 shadow-card p-6 lg:p-8 relative overflow-hidden text-white">
                             <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-orange-500/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-                            <div class="relative">
-                                <p class="text-xs font-bold uppercase tracking-[0.25em] text-orange-500 mb-2">HOD Command Center</p>
-                                <h2 class="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">Today's Academic Management Suite</h2>
-                                <p class="text-slate-400 mt-2 text-sm max-w-xl">Unified schedule management for 2nd, 3rd, and 4th-year batch allocations, dynamic proxy overrides, conflict alerts, and workload fatigue maps.</p>
+                            <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div>
+                                    <p class="text-xs font-bold uppercase tracking-[0.25em] text-orange-500 mb-2">HOD Command Center</p>
+                                    <h2 class="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">Today's Academic Management Suite</h2>
+                                    <p class="text-slate-400 mt-2 text-sm max-w-xl">Unified schedule management for 2nd, 3rd, and 4th-year batch allocations, dynamic proxy overrides, conflict alerts, and workload fatigue maps.</p>
+                                </div>
+                                <div class="shrink-0">
+                                    <button onclick="resetDemoDatabase()" id="btn-reset-db" class="bg-gradient-to-r from-rose-500/85 to-orange-600/85 hover:from-rose-600 hover:to-orange-700 text-white font-bold text-[11px] uppercase tracking-wider px-4 py-3 rounded-xl shadow-md hover:shadow-glow-rose transition-all duration-300 hover:scale-102 flex items-center gap-2 border border-rose-500/20">
+                                        <i class="fa-solid fa-trash-can text-rose-200"></i> Reset Database
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -1751,6 +1758,42 @@
                 btn.innerHTML = originalHtml;
                 console.error('Error saving schedule:', err);
                 alert('Failed to save to database.');
+            });
+        }
+
+        function resetDemoDatabase() {
+            if (!confirm("Are you sure you want to reset the demo database? This will delete all pending/approved swap requests, syllabus progress logs, and restore the original 5 conflict-free timetables.")) {
+                return;
+            }
+
+            const btn = document.getElementById('btn-reset-db');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Resetting…`;
+
+            fetch('/api/reset-demo-db/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+
+                if (data.success || data.message) {
+                    alert("Database successfully reset to original timetables & logins!");
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to reset database.'));
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                console.error('Error resetting database:', err);
+                alert('Failed to reset database.');
             });
         }
 
