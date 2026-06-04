@@ -30,3 +30,9 @@ media/timetables/*
 *.swp
 .DS_Store
 Thumbs.db
+
+# Compiled production staticfiles
+staticfiles/
+
+# Local EasyOCR model directory
+easyocr_models/

@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: chronosai
+    runtime: python
+    buildCommand: "bash build.sh"
+    startCommand: "gunicorn core.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.12
+      - key: DJANGO_SETTINGS_MODULE
+        value: core.settings
+      - key: DEBUG
+        value: "false"
+      - key: CELERY_TASK_ALWAYS_EAGER
+        value: "true"
+      - key: CHRONOSAI_DEDUP_REDIS_ENABLED
+        value: "false"
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false

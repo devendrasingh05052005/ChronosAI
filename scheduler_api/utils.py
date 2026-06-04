@@ -11,10 +11,13 @@ def get_ocr_reader():
     if _ocr_reader is None:
         try:
             import easyocr
-            _ocr_reader = easyocr.Reader(['en'], gpu=False)
-            print("[ChronosAI] EasyOCR reader initialized successfully (CPU mode).")
-        except ImportError:
-            print("[ChronosAI] WARNING: EasyOCR not installed. OCR will use mock data.")
+            from django.conf import settings
+            model_dir = str(settings.BASE_DIR / 'easyocr_models')
+            _ocr_reader = easyocr.Reader(['en'], gpu=False, model_storage_directory=model_dir)
+            print(f"[ChronosAI] EasyOCR reader initialized successfully from {model_dir} (CPU mode).")
+        except Exception as exc:
+            print(f"[ChronosAI] WARNING: EasyOCR initialization failed: {exc}")
+            traceback.print_exc()
             _ocr_reader = None
     return _ocr_reader
 
@@ -240,20 +243,19 @@ def call_gemini_api(prompt: str, system_instruction: str) -> dict:
         print("[ChronosAI Gemini Path] No GEMINI_API_KEY found in settings.py.")
         return None
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={gemini_key}"
     headers = {"Content-Type": "application/json"}
     payload = {
         "contents": [{
-            "parts": [{"text": f"{system_instruction}\n\nParse this OCR text:\n{prompt}"}]
+            "parts": [{"text": f"{system_instruction}\n\nParse this OCR text and respond ONLY with a valid JSON object containing the parsed rows under the key 'schedule'. Do not include any markdown formatting or backticks:\n{prompt}"}]
         }],
         "generationConfig": {
-            "responseMimeType": "application/json",
             "temperature": 0.1
         }
     }
 
     try:
-        print("[ChronosAI Gemini Path] Sending raw OCR text to Google Gemini 1.5 Flash...")
+        print("[ChronosAI Gemini Path] Sending raw OCR text to Google Gemini 2.0 Flash...")
         response = requests.post(url, headers=headers, json=payload, timeout=30)
         if response.status_code == 200:
             res_data = response.json()
@@ -283,27 +285,123 @@ def call_gemini_api(prompt: str, system_instruction: str) -> dict:
         return None
 
 
+def call_gemini_multimodal(file_path: str, system_instruction: str) -> dict:
+    import json
+    import requests
+    import re
+    import base64
+    from django.conf import settings
+
+    gemini_key = getattr(settings, 'GEMINI_API_KEY', None)
+    if not gemini_key:
+        print("[ChronosAI Gemini Path] No GEMINI_API_KEY found in settings.py.")
+        return None
+
+    mime_type = "image/png"
+    if file_path.lower().endswith(".jpg") or file_path.lower().endswith(".jpeg"):
+        mime_type = "image/jpeg"
+
+    try:
+        with open(file_path, "rb") as f:
+            img_data = base64.b64encode(f.read()).decode('utf-8')
+    except Exception as e:
+        print(f"[ChronosAI Gemini Path] Error reading image file for base64: {e}")
+        return None
+
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={gemini_key}"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "contents": [{
+            "parts": [
+                {"text": f"{system_instruction}\n\nAnalyze this timetable image and extract its grid structure into a structured JSON array under the key 'schedule'. Respond ONLY with a valid JSON object, no markdown backticks, no introductory text:"},
+                {
+                    "inlineData": {
+                        "mimeType": mime_type,
+                        "data": img_data
+                    }
+                }
+            ]
+        }],
+        "generationConfig": {
+            "temperature": 0.1
+        }
+    }
+
+    try:
+        print("[ChronosAI Gemini Path] Sending raw image directly to Google Gemini 2.0 Flash (Multimodal OCR)...")
+        response = requests.post(url, headers=headers, json=payload, timeout=45)
+        if response.status_code == 200:
+            res_data = response.json()
+            candidate_text = res_data['candidates'][0]['content']['parts'][0]['text']
+
+            # Clean and parse response JSON
+            cleaned = candidate_text.strip()
+            cleaned = re.sub(r'^\s*```(?:json)?\s*', '', cleaned, flags=re.IGNORECASE)
+            cleaned = re.sub(r'\s*```\s*$', '', cleaned).strip()
+            if not cleaned.startswith('{'):
+                m = re.search(r'\{[\s\S]*\}', cleaned)
+                if m:
+                    cleaned = m.group(0)
+
+            parsed_data = json.loads(cleaned)
+            if 'schedule' not in parsed_data:
+                parsed_data = {"schedule": parsed_data if isinstance(parsed_data, list) else []}
+
+            slots_count = len(parsed_data.get('schedule', []))
+            print(f"[ChronosAI Gemini Path] Gemini parsed successfully from image with {slots_count} slots.")
+            return parsed_data
+        else:
+            print(f"[ChronosAI Gemini Path] Gemini Multimodal API failed with status code {response.status_code}: {response.text}")
+            return None
+    except Exception as e:
+        print(f"[ChronosAI Gemini Path] Error calling Gemini Multimodal API: {e}")
+        return None
+
+
 def process_timetable_image(file_path: str) -> dict:
     import os
     from django.conf import settings
 
-    # --- STEP 1: OCR Extraction ---
-    raw_text = ""
-    reader = get_ocr_reader()
-
-    if reader is not None:
+    # --- NEW STRATEGY: Try Multimodal Gemini 2.0 Flash First ---
+    # This runs purely in the cloud, using 0MB local memory, avoiding OOM on Render Free tier
+    gemini_key = getattr(settings, 'GEMINI_API_KEY', None)
+    if gemini_key:
         try:
+            print("[ChronosAI] Attempting direct multimodal parsing via Google Gemini 2.0 Flash...")
+            parsed_data = call_gemini_multimodal(file_path, OCR_SYSTEM_PROMPT)
+            if parsed_data is not None and len(parsed_data.get('schedule', [])) >= 36:
+                print(f"[ChronosAI] Success! Successfully parsed {len(parsed_data['schedule'])} slots via Gemini Multimodal path.")
+                return parsed_data
+            else:
+                print("[ChronosAI] Gemini Multimodal returned incomplete slots, falling back to local OCR...")
+        except Exception as gemini_err:
+            print(f"[ChronosAI] Gemini Multimodal failed or errored: {gemini_err}")
+
+    # --- FALLBACK: Local OCR (EasyOCR) ---
+    import os
+    if os.environ.get('RENDER') or os.environ.get('PORT') or os.environ.get('RENDER_SERVICE_ID'):
+        raise Exception(
+            "Timetable parsing failed because GEMINI_API_KEY is missing, invalid, or rate-limited on Render. "
+            "Local OCR is disabled in production to prevent Out-Of-Memory (OOM) crashes on the Free Tier. "
+            "Please ensure you have configured a valid GEMINI_API_KEY in the Environment variables on your Render dashboard."
+        )
+
+    raw_text = ""
+    try:
+        reader = get_ocr_reader()
+        if reader is not None:
             print(f"[ChronosAI] Running EasyOCR on: {file_path}")
             results = reader.readtext(file_path, detail=0, paragraph=True)
             raw_text = "\n".join(results)
             print(f"[ChronosAI] OCR extracted {len(raw_text)} characters.")
-        except Exception as ocr_err:
-            print(f"[ChronosAI] OCR Error: {ocr_err}")
-            traceback.print_exc()
-            raw_text = f"OCR failed: {str(ocr_err)}"
-    else:
-        print("[ChronosAI] Using MOCK timetable data.")
-        return _build_mock_schedule()
+        else:
+            print("[ChronosAI] EasyOCR reader not available. Using MOCK data.")
+            return _build_smart_local_schedule("")
+    except Exception as ocr_err:
+        print(f"[ChronosAI] Local EasyOCR crashed or failed: {ocr_err}")
+        traceback.print_exc()
+        # If OCR fails, try to return mock data instead of crashing the whole server
+        return _build_smart_local_schedule("")
 
     # --- HYBRID INGESTION FAST PATH ---
     standard_schedule = _detect_standard_timetable(raw_text)
@@ -316,7 +414,7 @@ def process_timetable_image(file_path: str) -> dict:
     # --- GEMINI DYNAMIC EXTRACTION PATH ---
     gemini_parsed = call_gemini_api(raw_text, OCR_SYSTEM_PROMPT)
     if gemini_parsed is not None and len(gemini_parsed.get('schedule', [])) >= 36:
-        print("[ChronosAI Hybrid Path] Timetable parsed successfully via free Google Gemini 1.5 Flash.")
+        print("[ChronosAI Hybrid Path] Timetable parsed successfully via free Google Gemini 2.0 Flash.")
         return gemini_parsed
 
     print("[ChronosAI Hybrid Path] Gemini key not present or returned incomplete rows. Falling back to Groq LLM parser...")
@@ -325,7 +423,7 @@ def process_timetable_image(file_path: str) -> dict:
     keys = get_groq_api_keys()
     if not keys:
         print("[ChronosAI] WARNING: No Groq API keys available. Returning mock data.")
-        return _build_mock_schedule()
+        return _build_smart_local_schedule(raw_text)
 
     from groq import Groq
 
