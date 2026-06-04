@@ -450,7 +450,7 @@ def process_timetable_image(file_path: str) -> dict:
     for idx, key in enumerate(keys):
         try:
             print(f"[ChronosAI] Sending raw OCR text to Groq llama-3.3-70b-versatile using key index {idx}...")
-            client = Groq(api_key=key)
+            client = Groq(api_key=key, timeout=15.0)
             completion = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[
@@ -495,7 +495,7 @@ def process_timetable_image(file_path: str) -> dict:
         for idx, key in enumerate(keys):
             try:
                 print(f"[ChronosAI] Calling llama-3.1-8b-instant using key index {idx}...")
-                client = Groq(api_key=key)
+                client = Groq(api_key=key, timeout=15.0)
                 completion = client.chat.completions.create(
                     model="llama-3.1-8b-instant",
                     messages=[

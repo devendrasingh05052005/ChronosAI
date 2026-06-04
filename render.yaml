@@ -3,7 +3,7 @@ services:
     name: chronosai
     runtime: python
     buildCommand: "bash build.sh"
-    startCommand: "gunicorn core.wsgi:application"
+    startCommand: "gunicorn core.wsgi:application --timeout 120"
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.12

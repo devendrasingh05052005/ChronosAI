@@ -198,6 +198,7 @@ def build_graph():
                             api_key=key,
                             temperature=0.1,
                             max_tokens=2048,
+                            timeout=15,
                         )
                         if has_executed_action:
                             llm_with_tools = llm

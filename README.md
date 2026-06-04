@@ -5,28 +5,170 @@ managing faculty schedules, and assigning proxy teachers using an AI agent.
 
 ---
 
-## Architecture Overview
+## Architecture & System Flow
 
+### 1. High-Level Component Architecture
+This block diagram shows how the Single Page Application, Django Backend, SQLite Database, Celery background worker, and LangGraph cognitive brain interact.
+
+```mermaid
+graph TD
+    %% Styling
+    classDef frontend fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff;
+    classDef backend fill:#1e293b,stroke:#a855f7,stroke-width:2px,color:#fff;
+    classDef database fill:#1e293b,stroke:#10b981,stroke-width:2px,color:#fff;
+    classDef queue fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#fff;
+    classDef ai fill:#0f172a,stroke:#ec4899,stroke-width:2px,color:#fff;
+
+    %% Nodes
+    UI["💻 Glassmorphic UI / SPA<br>(HOD & Faculty Command Centers, Hallway Kiosk)"]:::frontend
+    
+    subgraph Django ["Django MVC Backend Framework"]
+        Router["🛣️ Global Router / Views<br>(views.py)"]:::backend
+        Parser["📄 OCR Ingestion Module<br>(utils.py)"]:::backend
+    end
+    
+    DB[("🗄️ Relational Database<br>(SQLite)")]:::database
+    
+    subgraph AsyncQueue ["Background Processing"]
+        Celery["🥦 Celery Tasks Worker"]:::queue
+        SMTP["✉️ SMTP / Email Alert Gateway"]:::queue
+        WhatsApp["💬 WhatsApp Alert Gateway"]:::queue
+        Telegram["🤖 Telegram Bot Gateway"]:::queue
+    end
+    
+    subgraph LangGraphBrain ["LangGraph Cognitive AI Brain"]
+        Graph["🔄 LangGraph State Machine<br>(agent_graph.py)"]:::ai
+        LLM["🧠 Groq Llama-3.3-70B"]:::ai
+        Tools["🛠️ Database Agent Tools<br>(agent_tools.py)"]:::ai
+    end
+
+    %% Connections
+    UI <-->|"HTTP Requests / JSON API"| Router
+    UI <-->|"WebSockets / Voice Chat"| Graph
+    
+    Router <-->|"Query / Write Data"| DB
+    Parser -->|"Bulk Transaction Commit"| Router
+    Parser <-->|"Cloud Multimodal API"| Gemini["☁️ Google Gemini API"]
+    
+    Router -->|"Trigger Async Job"| Celery
+    Celery -->|"Send Mail"| SMTP
+    Celery -->|"Log WhatsApp Card"| WhatsApp
+    Celery -->|"Log Telegram Card"| Telegram
+    
+    Graph <-->|"Context / Messages State"| LLM
+    LLM <-->|"Request Tool Execution"| Tools
+    Tools <-->|"CRUD Operations"| DB
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        ChronosAI System                         │
-├──────────────┬──────────────────────────┬───────────────────────┤
-│  Frontend    │      Django Backend       │    Background Worker  │
-│  (Vanilla JS │                           │                       │
-│  + Tailwind) │  ┌─────────────────────┐  │  ┌─────────────────┐ │
-│              │  │  Phase 1: OCR       │  │  │  Celery Worker  │ │
-│  Upload Zone │→ │  EasyOCR + Groq LLM │  │  │  Redis Broker   │ │
-│              │  └─────────────────────┘  │  │  Email Alerts   │ │
-│  Edit Table  │  ┌─────────────────────┐  │  └─────────────────┘ │
-│              │→ │  Phase 2: Confirm   │  │                       │
-│              │  │  Bulk DB Insert     │  │                       │
-│  Chat UI     │  └─────────────────────┘  │                       │
-│              │  ┌─────────────────────┐  │                       │
-│              │→ │  Phase 3: Agent     │  │                       │
-│              │  │  Fail-Safe Router   │  │                       │
-│              │  │  LangGraph + Groq   │  │                       │
-│              │  └─────────────────────┘  │                       │
-└──────────────┴──────────────────────────┴───────────────────────┘
+
+### 2. Visual Architecture Flowchart
+Here is a premium graphical representation of the ChronosAI System Architecture:
+
+![ChronosAI Architecture Flowchart](media/chronosai_architecture_flowchart.png)
+
+### 3. OCR Ingestion Pipeline Flow
+When an HOD uploads a printed timetable image, this pipeline automatically digitizes it and maps it directly to database rows.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor HOD as HOD (Admin)
+    participant UI as Upload Hub (SPA)
+    participant Views as Django Views (views.py)
+    participant Utils as Ingestion Pipeline (utils.py)
+    participant Gemini as Google Gemini API
+    participant DB as SQLite Database
+
+    HOD->>UI: Uploads timetable image (e.g., 3rd_A.png)
+    UI->>Views: POST /api/upload/ (multipart/form-data)
+    Views->>Utils: Save file to /media/timetables/ & process
+    critical Check Environment
+        Note over Utils: If running on local server (Render environment absent)
+        Utils->>Utils: Execute local EasyOCR segmentation
+    option Else if running in cloud (Render)
+        Utils->>Utils: Bypass local EasyOCR to prevent memory crash (OOM)
+    end
+    Utils->>Gemini: Send raw timetable image with strict OCR_SYSTEM_PROMPT
+    Gemini-->>Utils: Return structured JSON data containing rows (Day, Time, Teacher, Subject, Room)
+    Utils-->>Views: Parse and clean OCR JSON schema (resolves spelling, honorifics)
+    Views-->>UI: Return parsed data as a live verification preview grid
+    HOD->>UI: Reviews & edits clashing fields (if any) and clicks "Confirm & Save"
+    UI->>Views: POST /api/confirm_timetable/ (JSON Schedule Array)
+    Views->>DB: Perform bulk atomic database insert (Schedules & Employees)
+    DB-->>Views: Transaction Complete
+    Views-->>UI: Redirect to Dashboard (Workloads and Heatmaps updated instantly)
+```
+
+### 4. Agentic AI & LangGraph Decision Loop
+This flow details how the cognitive AI assistant resolves queries (like proxy allocations or scheduling checks) in a transaction-safe manner.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User (HOD or Faculty)
+    participant Chat as AI Assistant UI
+    participant Graph as LangGraph State (agent_graph.py)
+    participant LLM as Groq Llama-3.3-70B
+    participant Tools as DB Agent Tools (agent_tools.py)
+    participant DB as SQLite Database
+
+    User->>Chat: Asks: "Meha Ma'am's Monday 09:35 proxy assign crow to Arihant Sir"
+    Chat->>Graph: POST /api/chat/ with message list & current date/day context
+    Graph->>LLM: Pass conversation history + active system prompt context
+    Note over LLM: LLM identifies intent to assign a proxy.<br>Binds schema parameters.
+    LLM-->>Graph: Requests tool call: assign_proxy_tool(day="Monday", time="09:35", absent_teacher="Prof. Meha", proxy_teacher="Prof. Arihant")
+    Graph->>Tools: Execute assign_proxy_tool with arguments
+    
+    rect rgb(30, 41, 59)
+        Note over Tools: Double-Booking Conflict Guard checks:
+        Tools->>DB: Query: Is Arihant already scheduled at 09:35 on Monday?
+        DB-->>Tools: Answer: No, he is free.
+        Tools->>DB: Update Schedule row for Meha: is_proxy=True, proxy_teacher_name="Prof. Arihant"
+        DB-->>Tools: Row updated successfully
+    end
+    
+    Tools-->>Graph: Return execution result: "Proxy assigned successfully."
+    Graph->>LLM: Pass execution result back into conversation state
+    LLM-->>Graph: Formulate final user-facing response card
+    Graph-->>Chat: HTTP Response: "I have successfully assigned Prof. Arihant as a proxy..."
+    Chat->>User: Display response and update the timeline grid in real-time
+```
+
+### 5. Mutual Lecture Swap Request & Approval Flow
+How two faculty members exchange scheduling slots with HOD authorization and automated notification alerts.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor F1 as Requesting Faculty (e.g., Meha)
+    actor F2 as Target Faculty (e.g., Arihant)
+    actor HOD as HOD (Approver)
+    participant Views as Django Views (views.py)
+    participant DB as SQLite Database
+    participant Celery as Celery Tasks (tasks.py)
+
+    F1->>Views: Submit Swap Request (Slot A ↔ Slot B)
+    Views->>DB: Create SwapRequest record with status='Pending'
+    DB-->>Views: Saved
+    Views-->>F1: Swap Request logged in database
+    
+    Note over HOD: HOD logs in and checks "Swap Request Approvals Queue"
+    HOD->>Views: Clicks "Approve" (POST /api/swap-request/action/)
+    
+    rect rgb(30, 50, 40)
+        Note over Views: Django Database atomic transaction
+        Views->>DB: Validate double booking clashing limits
+        Views->>DB: Swap Employee ForeignKeys between the 2 Schedule entries
+        Views->>DB: Update SwapRequest status to 'Approved'
+    end
+    
+    DB-->>Views: Commit Transaction
+    Views->>Celery: Trigger async background notifications
+    Views-->>HOD: Dashboard refreshed
+    
+    par Async Alerts
+        Celery->>F1: Send Email + Simulated WhatsApp message confirmation
+        Celery->>F2: Send Email + Simulated Telegram notification confirmation
+    end
 ```
 
 ---
