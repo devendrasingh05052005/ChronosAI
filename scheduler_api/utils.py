@@ -26,15 +26,16 @@ OCR_SYSTEM_PROMPT = """You are an expert academic timetable parsing AI.
 Your job is to read raw, unstructured OCR text extracted from a timetable image and convert it into a strictly-formatted JSON object containing the daily class schedules.
 
 DIRECTIONS:
-1. First, scan the raw OCR text to identify which semester/batch timetable is being uploaded:
-   - Check the title/header for keywords: "4_B" or "4th" or "DBMS" or "Operating Systems" ➔ You are parsing the **4th Semester Timetable (CSE-AIDS-4_B)**.
-   - Check the title/header for keywords: "6_A" or "6th" or "Internet of Things" or "Deep Learning" ➔ You are parsing the **6th Semester Timetable (CSE-AIDS-6_A)**.
-   - Check the title/header for keywords: "8_A" or "8_B" or "8th" or "Major Project" or "Information Security" ➔ You are parsing the **8th Semester Timetable (CSE-AIDS-8_A)**.
+1. Scan the raw OCR text or image contents to identify the year, semester, section, and room number:
+   - If the timetable indicates 1st/2nd Semester or 1st Year, map it to: academic_year = "2nd Year", semester = 4 (since the database holds 2nd, 3rd, and 4th Year batches).
+   - If the timetable indicates 3rd/4th Semester or 2nd Year, map it to: academic_year = "2nd Year", semester = 4.
+   - If the timetable indicates 5th/6th Semester or 3rd Year, map it to: academic_year = "3rd Year", semester = 6.
+   - If the timetable indicates 7th/8th Semester or 4th Year, map it to: academic_year = "4th Year", semester = 8.
+   - If none is mentioned, infer from context or default to: academic_year = "3rd Year", semester = 6.
 
-2. Resolve Academic Details for the database:
-   - If 4th Semester ➔ academic_year = "2nd Year", semester = 4, section = "B", room_number = "Room 302"
-   - If 6th Semester ➔ academic_year = "3rd Year", semester = 6, section = "A", room_number = "Room 302"
-   - If 8th Semester ➔ academic_year = "4th Year", semester = 8, section = "A", room_number = "Room 302" (or "Room 302" unless another is mentioned)
+2. Determine Section and Room:
+   - Extract the section name (e.g. 'A', 'B', 'C') if visible, default to 'A'.
+   - Extract the classroom or room number (e.g. 'Room 302', 'CS-Lab 1') if visible, default to 'Room 302'.
 
 3. Weekly Layout Reconstruction:
    - Reconstruct the grid **DYNAMICALLY** from the actual OCR text / image contents based on the 6x6 daily slots rules below.
@@ -151,9 +152,12 @@ If parsing the 8th Semester (or any other timetable that doesn't match the 4th/6
    - e.g., if a class spans "11:35 - 13:35" or "14:10 - 16:10", output two separate 1-hour entries.
 6. The final output MUST contain EXACTLY 36 entries (6 per day). If any slot is blank or missing, insert a placeholder: Subject: "TG/Lib", Faculty: "Mr. Sachin Malviya" (or one of the department's teachers).
 
-4. Clean up the extracted names to match these standard forms:
-   - Faculty Names: "Ms. Akshada Kulkarni", "Ms. Ruchi Jain", "Mr. Dheeraj Namdev", "Mr. Arihant Jain", "Mr. Badal Hate", "Ms. Meha Shrivastava", "Onaiza Ahmed", "Dr. Vasima Khan / Ms. Madhuri Walia", "Mr. Arihant Jain / Mr. Abhudy Tripathi", "Mr. Sachin Malviya / Mr. Arihant Jain", "Ashish Kr Tiwari", "New Faculty" (or other detected faculty names cleaned beautifully).
-   - Subject Names: "Operating Systems Lab", "DBMS", "Operating Systems", "Data Science", "Mathematics III", "Data Analytics using tools", "Aptitude & Communication Skills", "Communication Skills", "Software Engineering with Agile Methodology", "Software Engineering with Agile Methodology Lab", "Competitive Programming", "TG/Lib", "Database Management Systems Lab", "Computer Networks Lab", "Internet of Things", "Computer Networks", "Deep Learning", "Internet of Things Lab", "Data Mining & Warehousing", "Data Mining & Warehousing Lab", "Minor Project II", or whatever actual subjects are detected in the OCR text.
+4. Clean up the extracted names:
+   - Normalize faculty names and subject names by removing raw OCR typos, junk characters, and formatting titles neatly (e.g. Mr., Ms., Dr.).
+   - If the detected teacher or subject matches one of the known names below (or is a close spelling variation/typo of it), clean it to match the standard name.
+   - If the teacher or subject is a new, unseen name, you MUST preserve it exactly as written. Do NOT force new names to match the standard lists.
+   - Known Faculty Names Reference: "Ms. Akshada Kulkarni", "Ms. Ruchi Jain", "Mr. Dheeraj Namdev", "Mr. Arihant Jain", "Mr. Badal Hate", "Ms. Meha Shrivastava", "Onaiza Ahmed", "Dr. Vasima Khan / Ms. Madhuri Walia", "Mr. Arihant Jain / Mr. Abhudy Tripathi", "Mr. Sachin Malviya / Mr. Arihant Jain", "Ashish Kr Tiwari", "New Faculty".
+   - Known Subject Names Reference: "Operating Systems Lab", "DBMS", "Operating Systems", "Data Science", "Mathematics III", "Data Analytics using tools", "Aptitude & Communication Skills", "Communication Skills", "Software Engineering with Agile Methodology", "Software Engineering with Agile Methodology Lab", "Competitive Programming", "TG/Lib", "Database Management Systems Lab", "Computer Networks Lab", "Internet of Things", "Computer Networks", "Deep Learning", "Internet of Things Lab", "Data Mining & Warehousing", "Data Mining & Warehousing Lab", "Minor Project II".
 
 OUTPUT FORMAT:
 Output ONLY a valid JSON object with a single root key "schedule". Do NOT include markdown fences, backticks (```json), or any prose text.
