@@ -37,8 +37,8 @@ DIRECTIONS:
    - If 8th Semester ➔ academic_year = "4th Year", semester = 8, section = "A", room_number = "Room 302" (or "Room 302" unless another is mentioned)
 
 3. Weekly Layout Reconstruction:
-   - For 4th and 6th semesters, use the **HIGH-FIDELITY TEMPLATE GRIDS** below to align and reconstruct the 36 slots perfectly.
-   - For 8th Semester (or any other semester not matching 4th or 6th), reconstruct the grid **DYNAMICALLY** from the OCR text based on the 6x6 daily slots rules below.
+   - Reconstruct the grid **DYNAMICALLY** from the actual OCR text / image contents based on the 6x6 daily slots rules below.
+   - The template grids provided below are ONLY for style guides, subject/teacher spelling references, and default names. You MUST extract the actual, real data (such as modified times, different subjects, new faculty, room numbers, sections) present in the uploaded timetable. Do NOT copy the templates directly if the timetable has different contents.
 
 =========================================
 4TH SEMESTER Timetable Grid (CSE-AIDS-4_B)
@@ -495,92 +495,32 @@ def process_timetable_image(file_path: str) -> dict:
         # If OCR fails, try to return mock data instead of crashing the whole server
         return _build_smart_local_schedule("")
 
-    # --- HYBRID INGESTION FAST PATH ---
-    standard_schedule = _detect_standard_timetable(raw_text)
-    if standard_schedule is not None:
-        print("[ChronosAI Hybrid Path] Fast-routing timetable locally (0 tokens utilized, 0 latency).")
-        return standard_schedule
-
-    print("[ChronosAI Hybrid Path] Unrecognized timetable format. Checking for Google Gemini API route...")
-
-    # --- GEMINI DYNAMIC EXTRACTION PATH ---
+    # --- DYNAMIC EXTRACTION PIPELINE ---
+    print("[ChronosAI Hybrid Path] Attempting dynamic extraction via Google Gemini API...")
     gemini_parsed = call_gemini_api(raw_text, OCR_SYSTEM_PROMPT)
     if gemini_parsed is not None and len(gemini_parsed.get('schedule', [])) >= 36:
         print("[ChronosAI Hybrid Path] Timetable parsed successfully via free Google Gemini 2.0 Flash.")
         return gemini_parsed
 
-    print("[ChronosAI Hybrid Path] Gemini key not present or returned incomplete rows. Falling back to Groq LLM parser...")
-
-    # --- STEP 2: Groq LLM Structurization ---
+    print("[ChronosAI Hybrid Path] Gemini key not present or returned incomplete rows. Trying Groq LLM parser...")
     keys = get_groq_api_keys()
-    if not keys:
-        print("[ChronosAI] WARNING: No Groq API keys available. Returning mock data.")
-        return _build_smart_local_schedule(raw_text)
-
-    from groq import Groq
-
     parsed = None
-    last_err = None
-
-    # Try primary model llama-3.3-70b-versatile with key rotation
-    for idx, key in enumerate(keys):
-        try:
-            print(f"[ChronosAI] Sending raw OCR text to Groq llama-3.3-70b-versatile using key index {idx}...")
-            client = Groq(api_key=key, timeout=15.0)
-            completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[
-                    {"role": "system", "content": OCR_SYSTEM_PROMPT},
-                    {"role": "user", "content": f"Parse this timetable OCR text into JSON:\n\n{raw_text}"}
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.1,
-                max_tokens=4096,
-            )
-            raw_response = completion.choices[0].message.content
-            
-            # Clean and parse response
-            cleaned = raw_response.strip()
-            cleaned = re.sub(r'^\s*```(?:json)?\s*', '', cleaned, flags=re.IGNORECASE)
-            cleaned = re.sub(r'\s*```\s*$', '', cleaned).strip()
-            if not cleaned.startswith('{'):
-                m = re.search(r'\{[\s\S]*\}', cleaned)
-                if m:
-                    cleaned = m.group(0)
-
-            parsed_data = json.loads(cleaned)
-            if 'schedule' not in parsed_data:
-                parsed_data = {"schedule": parsed_data if isinstance(parsed_data, list) else []}
-
-            # Enforce 36-slot integrity guard
-            slots_count = len(parsed_data.get('schedule', []))
-            if slots_count >= 36:
-                print(f"[ChronosAI] Groq parsed successfully on key index {idx} with {slots_count} slots.")
-                return parsed_data
-            else:
-                print(f"[ChronosAI] Groq key index {idx} parsed but only returned {slots_count} slots (expected 36).")
-                parsed = parsed_data
-        except Exception as primary_err:
-            print(f"[ChronosAI] Groq key index {idx} (70B model) rate limited or failed: {primary_err}")
-            last_err = primary_err
-
-    # Fallback to llama-3.1-8b-instant with key rotation
-    if not parsed or len(parsed.get('schedule', [])) < 36:
-        print("[ChronosAI] Primary 70B model failed or returned incomplete schedule for all keys.")
-        print("[ChronosAI] Trying fallback model llama-3.1-8b-instant with rotating keys...")
+    if keys:
+        from groq import Groq
+        # Try primary model llama-3.3-70b-versatile with key rotation
         for idx, key in enumerate(keys):
             try:
-                print(f"[ChronosAI] Calling llama-3.1-8b-instant using key index {idx}...")
+                print(f"[ChronosAI] Sending raw OCR text to Groq llama-3.3-70b-versatile using key index {idx}...")
                 client = Groq(api_key=key, timeout=15.0)
                 completion = client.chat.completions.create(
-                    model="llama-3.1-8b-instant",
+                    model="llama-3.3-70b-versatile",
                     messages=[
                         {"role": "system", "content": OCR_SYSTEM_PROMPT},
                         {"role": "user", "content": f"Parse this timetable OCR text into JSON:\n\n{raw_text}"}
                     ],
                     response_format={"type": "json_object"},
                     temperature=0.1,
-                    max_tokens=1500,
+                    max_tokens=4096,
                 )
                 raw_response = completion.choices[0].message.content
                 cleaned = raw_response.strip()
@@ -597,19 +537,62 @@ def process_timetable_image(file_path: str) -> dict:
 
                 slots_count = len(parsed_data.get('schedule', []))
                 if slots_count >= 36:
-                    print(f"[ChronosAI] Llama-8B fallback parsed successfully on key index {idx} with {slots_count} slots.")
+                    print(f"[ChronosAI] Groq parsed successfully on key index {idx} with {slots_count} slots.")
                     return parsed_data
                 parsed = parsed_data
-            except Exception as secondary_err:
-                print(f"[ChronosAI] Llama-8B fallback failed on key index {idx}: {secondary_err}")
-                last_err = secondary_err
+            except Exception as e:
+                print(f"[ChronosAI] Groq 70B failed using key index {idx}: {e}")
 
-    # If both models failed or returned incomplete, fall back to smart local high-fidelity generator
-    if not parsed or len(parsed.get('schedule', [])) < 36:
-        print("[ChronosAI] Groq APIs failed to produce a complete 36-slot schedule. Attempting local high-fidelity fallback...")
-        return _build_smart_local_schedule(raw_text)
+        # Try fallback model llama-3.1-8b-instant with rotating keys
+        if not parsed or len(parsed.get('schedule', [])) < 36:
+            print("[ChronosAI] Primary 70B model failed or returned incomplete schedule. Trying llama-3.1-8b-instant...")
+            for idx, key in enumerate(keys):
+                try:
+                    print(f"[ChronosAI] Calling llama-3.1-8b-instant using key index {idx}...")
+                    client = Groq(api_key=key, timeout=15.0)
+                    completion = client.chat.completions.create(
+                        model="llama-3.1-8b-instant",
+                        messages=[
+                            {"role": "system", "content": OCR_SYSTEM_PROMPT},
+                            {"role": "user", "content": f"Parse this timetable OCR text into JSON:\n\n{raw_text}"}
+                        ],
+                        response_format={"type": "json_object"},
+                        temperature=0.1,
+                        max_tokens=1500,
+                    )
+                    raw_response = completion.choices[0].message.content
+                    cleaned = raw_response.strip()
+                    cleaned = re.sub(r'^\s*```(?:json)?\s*', '', cleaned, flags=re.IGNORECASE)
+                    cleaned = re.sub(r'\s*```\s*$', '', cleaned).strip()
+                    if not cleaned.startswith('{'):
+                        m = re.search(r'\{[\s\S]*\}', cleaned)
+                        if m:
+                            cleaned = m.group(0)
 
-    return parsed
+                    parsed_data = json.loads(cleaned)
+                    if 'schedule' not in parsed_data:
+                        parsed_data = {"schedule": parsed_data if isinstance(parsed_data, list) else []}
+
+                    slots_count = len(parsed_data.get('schedule', []))
+                    if slots_count >= 36:
+                        print(f"[ChronosAI] Llama-8B fallback parsed successfully on key index {idx} with {slots_count} slots.")
+                        return parsed_data
+                    parsed = parsed_data
+                except Exception as e:
+                    print(f"[ChronosAI] Llama-8B failed on key index {idx}: {e}")
+
+    # --- FALLBACK TO STANDARD LOCAL TEMPLATE (LAST RESORT) ---
+    print("[ChronosAI Hybrid Path] Cloud APIs failed or returned incomplete data. Checking for standard local templates...")
+    standard_schedule = _detect_standard_timetable(raw_text)
+    if standard_schedule is not None:
+        print("[ChronosAI Hybrid Path] Fast-routing timetable locally using standard template.")
+        return standard_schedule
+
+    # Otherwise return whatever parsed data we managed to get, or the smart local schedule based on keywords
+    if parsed and len(parsed.get('schedule', [])) > 0:
+        return parsed
+
+    return _build_smart_local_schedule(raw_text)
 
 
 def _build_smart_local_schedule(raw_text: str) -> dict:
